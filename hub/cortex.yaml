@@ -5,6 +5,7 @@ metadata:
   name: tenants
   namespace: flux-system
 spec:
+  serviceAccountName: kustomize-controller
   interval: 10m
   retryInterval: 1m
   timeout: 5m
@@ -21,6 +22,7 @@ metadata:
   name: infra-controllers
   namespace: flux-system
 spec:
+  serviceAccountName: kustomize-controller
   dependsOn:
     - name: tenants
   interval: 10m
@@ -39,6 +41,7 @@ metadata:
   name: infra-configs
   namespace: flux-system
 spec:
+  serviceAccountName: kustomize-controller
   dependsOn:
     - name: infra-controllers
   interval: 10m

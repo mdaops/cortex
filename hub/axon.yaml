@@ -16,6 +16,7 @@ metadata:
   name: axon-tenants
   namespace: axon
 spec:
+  serviceAccountName: flux-cluster-admin
   interval: 10m
   retryInterval: 1m
   timeout: 5m
@@ -35,6 +36,7 @@ metadata:
   name: axon-infra-controllers
   namespace: axon
 spec:
+  serviceAccountName: flux-cluster-admin
   dependsOn:
     - name: axon-tenants
   interval: 10m
@@ -56,6 +58,7 @@ metadata:
   name: axon-infra-configs
   namespace: axon
 spec:
+  serviceAccountName: flux-cluster-admin
   dependsOn:
     - name: axon-infra-controllers
   interval: 10m
@@ -77,6 +80,7 @@ metadata:
   name: axon-apps
   namespace: axon
 spec:
+  serviceAccountName: flux-restricted
   dependsOn:
     - name: axon-infra-configs
   interval: 10m

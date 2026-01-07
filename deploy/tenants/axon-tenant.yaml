@@ -9,18 +9,38 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: flux-reconciler
+  name: flux-cluster-admin
   namespace: axon
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: axon-flux-reconciler
+  name: axon-flux-cluster-admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: cluster-admin
 subjects:
   - kind: ServiceAccount
-    name: flux-reconciler
+    name: flux-cluster-admin
+    namespace: axon
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flux-restricted
+  namespace: axon
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: axon-flux-restricted
+  namespace: axon
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: ServiceAccount
+    name: flux-restricted
     namespace: axon
