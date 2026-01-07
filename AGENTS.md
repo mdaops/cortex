@@ -113,11 +113,30 @@ recipe-name:
 - Scripts: `lowercase-with-dashes.sh`
 - Kustomization: always `kustomization.yaml`
 
-## Git
+## Commits
 
-Commit messages: imperative mood, no period
-- Good: `Add Crossplane provider configuration`
-- Bad: `Added crossplane provider configuration.`
+Conventional commits only. Format: `type: description`
+
+Types:
+- `feat`: new feature or capability
+- `fix`: bug fix
+- `docs`: documentation only
+- `refactor`: code change that neither fixes nor adds
+- `chore`: maintenance, dependencies, tooling
+- `ci`: CI/CD changes
+- `test`: adding or updating tests
+
+Rules:
+- Lowercase type and description
+- No period at end
+- Imperative mood
+- Max 72 characters
+
+Examples:
+- `feat: add crossplane provider configuration`
+- `fix: correct kubeconfig secret path`
+- `chore: update flux to v2.2.0`
+- `refactor: simplify fleet-up script`
 
 ## Testing
 
