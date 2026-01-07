@@ -8,11 +8,11 @@ fleet-up:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Creating Cortex cluster..."
-    kind create cluster --config clusters/cortex.yaml --name cortex 2>/dev/null || echo "Cortex cluster already exists"
+    kind create cluster --config kind/cortex.yaml --name cortex 2>/dev/null || echo "Cortex cluster already exists"
     echo "Creating Axon cluster..."
-    kind create cluster --config clusters/axon.yaml --name axon 2>/dev/null || echo "Axon cluster already exists"
+    kind create cluster --config kind/axon.yaml --name axon 2>/dev/null || echo "Axon cluster already exists"
     echo "Creating kubeconfig secret for Axon..."
-    just _create-axon-kubeconfig
+    just _create-fleet-kubeconfig
     echo ""
     echo "Fleet is up"
     just fleet-status
@@ -30,14 +30,14 @@ fleet-status:
     #!/usr/bin/env bash
     echo "Fleet Status"
     echo ""
-    echo "=== Cortex (Hub) ==="
+    echo "=== Cortex (Platform) ==="
     if kubectl --context kind-cortex get nodes &>/dev/null; then
         kubectl --context kind-cortex get nodes
     else
         echo "  Not running"
     fi
     echo ""
-    echo "=== Axon (Spoke) ==="
+    echo "=== Axon (Fleet Dev) ==="
     if kubectl --context kind-axon get nodes &>/dev/null; then
         kubectl --context kind-axon get nodes
     else
@@ -88,15 +88,22 @@ flux-resume:
 validate:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Validating Cortex manifests..."
-    for dir in deploy/*/; do
+    echo "Validating platform manifests..."
+    for dir in platform/*/; do
         if [ -f "$dir/kustomization.yaml" ]; then
             echo "  Checking $dir..."
             kustomize build "$dir" | kubeconform -strict -skip CustomResourceDefinition
         fi
     done
-    echo "Validating Axon manifests..."
-    for dir in ../axon/deploy/*/; do
+    echo "Validating fleet/dev manifests..."
+    for dir in fleet/dev/*/; do
+        if [ -f "$dir/kustomization.yaml" ]; then
+            echo "  Checking $dir..."
+            kustomize build "$dir" | kubeconform -strict -skip CustomResourceDefinition
+        fi
+    done
+    echo "Validating fleet/production manifests..."
+    for dir in fleet/production/*/; do
         if [ -f "$dir/kustomization.yaml" ]; then
             echo "  Checking $dir..."
             kustomize build "$dir" | kubeconform -strict -skip CustomResourceDefinition
@@ -105,8 +112,8 @@ validate:
     echo ""
     echo "All manifests valid"
 
-_create-axon-kubeconfig:
-    ./scripts/create-axon-kubeconfig.sh
+_create-fleet-kubeconfig:
+    ./scripts/create-fleet-kubeconfig.sh
 
 k9s-cortex:
     k9s --context kind-cortex

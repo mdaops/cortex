@@ -2,7 +2,7 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: tenants
+  name: platform-tenants
   namespace: flux-system
 spec:
   serviceAccountName: kustomize-controller
@@ -11,7 +11,7 @@ spec:
   timeout: 5m
   prune: true
   wait: true
-  path: ./deploy/tenants
+  path: ./platform/tenants
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -19,18 +19,18 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: infra-controllers
+  name: platform-controllers
   namespace: flux-system
 spec:
   serviceAccountName: kustomize-controller
   dependsOn:
-    - name: tenants
+    - name: platform-tenants
   interval: 10m
   retryInterval: 1m
   timeout: 5m
   prune: true
   wait: true
-  path: ./deploy/infra-controllers
+  path: ./platform/controllers
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -38,18 +38,18 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: infra-configs
+  name: platform-config
   namespace: flux-system
 spec:
   serviceAccountName: kustomize-controller
   dependsOn:
-    - name: infra-controllers
+    - name: platform-controllers
   interval: 10m
   retryInterval: 1m
   timeout: 5m
   prune: true
   wait: true
-  path: ./deploy/infra-configs
+  path: ./platform/config
   sourceRef:
     kind: GitRepository
     name: flux-system

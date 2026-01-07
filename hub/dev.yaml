@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fleet-dev
+  labels:
+    toolkit.fluxcd.io/tenant: fleet-dev
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-kubeconfig
+  namespace: fleet-dev
+type: Opaque
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: dev-tenants
+  namespace: fleet-dev
+spec:
+  serviceAccountName: flux-cluster-admin
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  wait: true
+  path: ./fleet/dev/tenants
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  kubeConfig:
+    secretRef:
+      name: cluster-kubeconfig
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: dev-controllers
+  namespace: fleet-dev
+spec:
+  serviceAccountName: flux-cluster-admin
+  dependsOn:
+    - name: dev-tenants
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  wait: true
+  path: ./fleet/dev/controllers
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  kubeConfig:
+    secretRef:
+      name: cluster-kubeconfig
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: dev-config
+  namespace: fleet-dev
+spec:
+  serviceAccountName: flux-cluster-admin
+  dependsOn:
+    - name: dev-controllers
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  wait: true
+  path: ./fleet/dev/config
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  kubeConfig:
+    secretRef:
+      name: cluster-kubeconfig

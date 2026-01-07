@@ -1,26 +1,77 @@
 # Agent Instructions for Cortex
 
 Control plane for Synapse, a Kubernetes-native MLOps platform.
-Cortex (hub) manages Axon (spoke) clusters via Flux GitOps.
+Cortex manages platform infrastructure and fleet clusters via Flux GitOps.
+Argo CD (deployed by Flux) handles application workloads on fleet clusters.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                       CORTEX (Platform Cluster)                     │
+│                                                                     │
+│  Flux manages:                                                      │
+│  ├── Platform infrastructure (cert-manager, kyverno, etc.)         │
+│  ├── Argo CD installation & configuration on fleet clusters        │
+│  ├── Tenant boundaries (namespaces, quotas, RBAC)                  │
+│  └── Control plane components across all clusters                  │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ Deploys control plane TO
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      FLEET CLUSTERS (Spokes)                        │
+│                                                                     │
+│  Argo CD manages:                                                   │
+│  ├── Application workloads (Deployments, Services, etc.)           │
+│  ├── Product team resources (Buckets, ML pipelines, etc.)          │
+│  └── Application-level configs                                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ## Structure
 
 ```
-cortex/                     # Hub cluster - YOU ARE HERE
-├── hub/                    # Flux Kustomizations (self + axon management)
-├── deploy/                 # Manifests deployed to cortex
-│   ├── tenants/            # Namespaces, RBAC for managed clusters
-│   ├── infra-controllers/  # CRD controllers (Crossplane, Kyverno)
-│   └── infra-configs/      # Cluster-wide custom resources
-├── clusters/               # Kind cluster configurations
+cortex/
+├── hub/                    # Flux entry point (bootstrapped to cortex)
+│   ├── flux-system/        # Flux components (auto-generated)
+│   ├── cortex.yaml         # Platform cluster Kustomizations
+│   └── dev.yaml            # Dev fleet environment Kustomizations
+│
+├── deploy/                 # Base definitions (shared across all)
+│   ├── controllers/        # HelmReleases: argo-cd, cert-manager, kyverno
+│   ├── config/             # Kyverno policies, cluster configs
+│   └── tenants/            # Namespaces, service accounts, RBAC
+│
+├── platform/               # Platform cluster overlays
+│   ├── controllers/        # → ../deploy/controllers + platform-specific
+│   ├── config/             # → ../deploy/config + platform-specific
+│   └── tenants/            # → ../deploy/tenants + platform-specific
+│
+├── fleet/                  # Fleet cluster overlays (per environment)
+│   ├── dev/
+│   │   ├── controllers/    # → ../../deploy/controllers + dev patches
+│   │   ├── config/
+│   │   └── tenants/
+│   └── production/
+│       ├── controllers/
+│       ├── config/
+│       └── tenants/
+│
+├── kind/                   # Kind cluster configurations (local dev)
+│   ├── cortex.yaml
+│   └── axon.yaml
+│
 ├── scripts/                # Shell scripts
 ├── flake.nix               # Nix dev environment
 └── Justfile                # Task runner
-
-axon/                       # Spoke cluster (sibling repo)
-├── deploy/{tenants,infra-controllers,infra-configs,apps}/
-└── flake.nix
 ```
+
+## Flux Dependency Chain
+
+1. `tenants` - Namespaces, service accounts, role bindings
+2. `controllers` - CRD controllers (depends on tenants)
+3. `config` - Cluster-wide custom resources (depends on controllers)
 
 ## Commands
 
@@ -34,11 +85,8 @@ just fleet-status             # Check health
 just bootstrap mdaops cortex  # Bootstrap Flux (needs GITHUB_TOKEN)
 just flux-status              # View Flux resources
 just flux-reconcile           # Force sync
-just flux-watch               # Watch kustomizations
 
-just validate                 # Validate manifests with kubeconform
-just ctx-cortex               # Switch to cortex context
-just ctx-axon                 # Switch to axon context
+just validate                 # Validate manifests
 ```
 
 ## YAML Style
@@ -72,8 +120,6 @@ kind: Kustomization
 resources:
   - resource-a.yaml
 ```
-
-Flux dependency chain: tenants -> infra-controllers -> infra-configs -> apps
 
 ## Nix Style
 
@@ -142,14 +188,7 @@ Examples:
 
 1. Validate before commit: `just validate`
 2. After push, check Flux: `just flux-status`
-3. Verify target: `kubectl --context kind-axon get pods -A`
-
-## Architecture
-
-- Cortex runs Flux controllers
-- Axon kubeconfig stored as Secret in `axon` namespace on cortex
-- Flux applies to axon via `kubeConfig.secretRef`
-- Changes to axon/ repo pulled by cortex, applied remotely
+3. Verify fleet cluster: `kubectl --context kind-axon get pods -A`
 
 ## Do Not
 
