@@ -47,9 +47,6 @@ spec:
     kind: GitRepository
     name: flux-system
     namespace: flux-system
-  kubeConfig:
-    secretRef:
-      name: cluster-kubeconfig
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
