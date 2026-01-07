@@ -138,29 +138,8 @@ validate:
 
 # ==================== Utilities ====================
 
-# Create kubeconfig secret for Axon management
 _create-axon-kubeconfig:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    # Get the axon kubeconfig
-    AXON_KUBECONFIG=$(kind get kubeconfig --name axon)
-
-    # Get the axon container IP (Kind uses container networking)
-    AXON_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' axon-control-plane)
-
-    # Replace localhost with container IP
-    AXON_KUBECONFIG=$(echo "$AXON_KUBECONFIG" | sed "s|https://127.0.0.1:[0-9]*|https://${AXON_IP}:6443|g")
-
-    # Create namespace if not exists
-    kubectl --context kind-cortex create namespace axon 2>/dev/null || true
-
-    # Create/update secret
-    kubectl --context kind-cortex -n axon create secret generic cluster-kubeconfig \
-        --from-literal=value="$AXON_KUBECONFIG" \
-        --dry-run=client -o yaml | kubectl --context kind-cortex apply -f -
-
-    echo "Kubeconfig secret created in axon namespace"
+    ./scripts/create-axon-kubeconfig.sh
 
 # Interactive k9s for cortex
 k9s-cortex:
