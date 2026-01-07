@@ -1,25 +1,40 @@
 # Cortex
 
-Synapse Platform Control Plane - the hub cluster for MLOps.
+Synapse Platform Control Plane - manages fleet clusters via Flux GitOps.
 
-## Overview
+## Architecture
 
-Cortex is the central management cluster that orchestrates the Synapse platform. It runs Flux and manages the Axon product cluster(s) via GitOps.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                       CORTEX (Platform Cluster)                     │
+│                                                                     │
+│  Flux manages:                                                      │
+│  ├── Platform infrastructure (Crossplane, Kyverno, etc.)           │
+│  ├── Argo CD installation on fleet clusters                        │
+│  └── Tenant boundaries (namespaces, quotas, RBAC)                  │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              │ Deploys control plane TO
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      FLEET CLUSTERS (Spokes)                        │
+│                                                                     │
+│  Argo CD manages:                                                   │
+│  ├── Application workloads                                          │
+│  └── Product team resources                                         │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ## Quick Start
 
 ```bash
-# Enter dev shell
 nix develop
 
-# Create clusters
 just fleet-up
 
-# Bootstrap Flux (requires GITHUB_TOKEN)
 export GITHUB_TOKEN=<your-token>
 just bootstrap mdaops cortex
 
-# Watch reconciliation
 just flux-watch
 ```
 
@@ -27,15 +42,41 @@ just flux-watch
 
 ```
 cortex/
-├── clusters/          # Kind cluster definitions
-├── deploy/            # Base Kustomize definitions
-│   ├── tenants/       # Namespace and RBAC for managed clusters
-│   ├── infra-controllers/  # CRD controllers (Crossplane, Kyverno, etc.)
-│   └── infra-configs/      # Cluster-wide custom resources
-└── hub/               # Flux configuration
-    ├── cortex.yaml    # Self-management
-    └── axon.yaml      # Spoke management
+├── hub/                    # Flux entry point
+│   ├── flux-system/        # Flux controllers
+│   ├── cortex.yaml         # Platform Kustomizations
+│   └── dev.yaml            # Fleet dev Kustomizations
+│
+├── deploy/                 # Base definitions (shared)
+│   ├── controllers/        # HelmReleases
+│   ├── config/             # Policies, configs
+│   └── tenants/            # SAs, RBAC, namespaces
+│
+├── platform/               # Platform cluster overlays
+│   ├── controllers/
+│   ├── config/
+│   └── tenants/
+│
+├── fleet/                  # Fleet cluster overlays
+│   ├── dev/
+│   │   ├── controllers/
+│   │   ├── config/
+│   │   └── tenants/
+│   └── production/
+│       └── ...
+│
+└── kind/                   # Kind cluster configs
+    ├── cortex.yaml
+    └── axon.yaml
 ```
+
+## Dependency Chain
+
+Flux applies in order: `tenants` → `controllers` → `config`
+
+Each namespace has its own set:
+- `flux-system/tenants` → `flux-system/controllers` → `flux-system/config` (platform)
+- `dev/tenants` → `dev/controllers` → `dev/config` (fleet dev)
 
 ## Commands
 
@@ -48,3 +89,10 @@ cortex/
 | `just flux-status` | View Flux status |
 | `just flux-reconcile` | Force reconciliation |
 | `just validate` | Validate manifests |
+
+## Adding a Fleet Environment
+
+1. Create overlay in `fleet/<env>/`
+2. Create hub file `hub/<env>.yaml`
+3. Add to `hub/kustomization.yaml`
+4. Create kubeconfig secret in `<env>` namespace on cortex
