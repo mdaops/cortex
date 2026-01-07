@@ -6,20 +6,13 @@ metadata:
   labels:
     toolkit.fluxcd.io/tenant: fleet-dev
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: cluster-kubeconfig
-  namespace: fleet-dev
-type: Opaque
----
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: dev-tenants
-  namespace: fleet-dev
+  namespace: flux-system
 spec:
-  serviceAccountName: flux-cluster-admin
+  serviceAccountName: kustomize-controller
   interval: 10m
   retryInterval: 1m
   timeout: 5m
@@ -29,18 +22,17 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-    namespace: flux-system
   kubeConfig:
     secretRef:
-      name: cluster-kubeconfig
+      name: fleet-dev-kubeconfig
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: dev-controllers
-  namespace: fleet-dev
+  namespace: flux-system
 spec:
-  serviceAccountName: flux-cluster-admin
+  serviceAccountName: kustomize-controller
   dependsOn:
     - name: dev-tenants
   interval: 10m
@@ -52,18 +44,17 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-    namespace: flux-system
   kubeConfig:
     secretRef:
-      name: cluster-kubeconfig
+      name: fleet-dev-kubeconfig
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: dev-config
-  namespace: fleet-dev
+  namespace: flux-system
 spec:
-  serviceAccountName: flux-cluster-admin
+  serviceAccountName: kustomize-controller
   dependsOn:
     - name: dev-controllers
   interval: 10m
@@ -75,7 +66,6 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-    namespace: flux-system
   kubeConfig:
     secretRef:
-      name: cluster-kubeconfig
+      name: fleet-dev-kubeconfig
