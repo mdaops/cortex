@@ -9,7 +9,7 @@ metadata:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: dev-tenants
+  name: tenants
   namespace: dev
 spec:
   interval: 10m
@@ -32,11 +32,11 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: dev-controllers
+  name: controllers
   namespace: dev
 spec:
   dependsOn:
-    - name: dev-tenants
+    - name: tenants
   interval: 10m
   retryInterval: 1m
   timeout: 5m
@@ -54,11 +54,11 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: dev-config
+  name: config
   namespace: dev
 spec:
   dependsOn:
-    - name: dev-controllers
+    - name: controllers
   interval: 10m
   retryInterval: 1m
   timeout: 5m
