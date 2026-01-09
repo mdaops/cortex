@@ -20,7 +20,7 @@ spec:
   chart:
     spec:
       chart: argo-events
-      version: "2.4.9"
+      version: "2.4.19"
       sourceRef:
         kind: HelmRepository
         name: argo
