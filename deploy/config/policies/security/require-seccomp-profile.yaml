@@ -1,0 +1,45 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-seccomp-profile
+  annotations:
+    policies.kyverno.io/title: Require Seccomp Profile
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: medium
+spec:
+  validationFailureAction: Audit
+  background: true
+  rules:
+    - name: seccomp-profile
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+      validate:
+        message: "A seccomp profile (RuntimeDefault or Localhost) must be set."
+        anyPattern:
+          - spec:
+              securityContext:
+                seccompProfile:
+                  type: RuntimeDefault
+          - spec:
+              securityContext:
+                seccompProfile:
+                  type: Localhost
+          - spec:
+              containers:
+                - securityContext:
+                    seccompProfile:
+                      type: RuntimeDefault
+          - spec:
+              containers:
+                - securityContext:
+                    seccompProfile:
+                      type: Localhost
