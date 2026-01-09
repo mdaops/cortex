@@ -13,7 +13,7 @@ metadata:
   name: cloudnative-pg
 spec:
   interval: 30m
-  targetNamespace: cnpg-system
+  targetNamespace: postgres-system
   install:
     createNamespace: true
     remediation:
