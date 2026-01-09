@@ -14,7 +14,7 @@ metadata:
   name: strimzi-kafka-operator
 spec:
   interval: 30m
-  targetNamespace: strimzi-system
+  targetNamespace: kafka-system
   install:
     createNamespace: true
     remediation:
