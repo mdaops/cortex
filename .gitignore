@@ -17,3 +17,4 @@ Thumbs.db
 *.key
 *.pem
 secrets/
+PLAN.md
