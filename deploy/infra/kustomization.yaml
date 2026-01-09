@@ -5,6 +5,7 @@ resources:
   - cert-manager
   - cloudnative-pg
   - crossplane
+  - flink
   - istio
   - kyverno
   - seaweedfs
