@@ -23,12 +23,12 @@ spec:
               namespaces:
                 - kube-system
       validate:
-        message: "Images must be from approved registries: ghcr.io, docker.io, gcr.io, quay.io, registry.k8s.io"
+        message: "Images must be from approved registries: ghcr.io, docker.io, gcr.io, quay.io, registry.k8s.io, xpkg.crossplane.io"
         pattern:
           spec:
             containers:
-              - image: "ghcr.io/* | docker.io/* | gcr.io/* | quay.io/* | registry.k8s.io/*"
+              - image: "ghcr.io/* | docker.io/* | gcr.io/* | quay.io/* | registry.k8s.io/* | xpkg.crossplane.io/*"
             =(initContainers):
-              - image: "ghcr.io/* | docker.io/* | gcr.io/* | quay.io/* | registry.k8s.io/*"
+              - image: "ghcr.io/* | docker.io/* | gcr.io/* | quay.io/* | registry.k8s.io/* | xpkg.crossplane.io/*"
             =(ephemeralContainers):
-              - image: "ghcr.io/* | docker.io/* | gcr.io/* | quay.io/* | registry.k8s.io/*"
+              - image: "ghcr.io/* | docker.io/* | gcr.io/* | quay.io/* | registry.k8s.io/* | xpkg.crossplane.io/*"
