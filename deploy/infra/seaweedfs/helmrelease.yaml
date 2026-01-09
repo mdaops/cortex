@@ -1,0 +1,44 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: seaweedfs-operator
+spec:
+  interval: 1h
+  url: https://seaweedfs.github.io/seaweedfs-operator/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: seaweedfs-operator
+spec:
+  interval: 30m
+  targetNamespace: seaweedfs-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  kubeConfig:
+    secretRef:
+      name: cluster-kubeconfig
+  chart:
+    spec:
+      chart: seaweedfs-operator
+      version: "0.1.3"
+      sourceRef:
+        kind: HelmRepository
+        name: seaweedfs-operator
+      interval: 12h
+  values:
+    webhook:
+      enabled: false
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        memory: 128Mi
