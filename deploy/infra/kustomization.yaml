@@ -8,4 +8,5 @@ resources:
   - istio
   - kyverno
   - seaweedfs
+  - strimzi
   - valkey
