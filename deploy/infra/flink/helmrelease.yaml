@@ -1,0 +1,59 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: flink-operator
+spec:
+  interval: 1h
+  url: https://downloads.apache.org/flink/flink-kubernetes-operator-1.10.0/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flink-kubernetes-operator
+spec:
+  interval: 30m
+  targetNamespace: flink-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  kubeConfig:
+    secretRef:
+      name: cluster-kubeconfig
+  chart:
+    spec:
+      chart: flink-kubernetes-operator
+      version: "1.10.0"
+      sourceRef:
+        kind: HelmRepository
+        name: flink-operator
+      interval: 12h
+  values:
+    replicas: 1
+    watchNamespaces: []
+    webhook:
+      create: true
+    operatorPod:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+    podSecurityContext:
+      runAsUser: 9999
+      runAsGroup: 9999
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    operatorSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true

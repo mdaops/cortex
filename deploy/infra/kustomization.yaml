@@ -3,6 +3,11 @@ kind: Kustomization
 resources:
   - argocd
   - cert-manager
+  - cloudnative-pg
   - crossplane
+  - flink
   - istio
   - kyverno
+  - seaweedfs
+  - strimzi
+  - valkey
