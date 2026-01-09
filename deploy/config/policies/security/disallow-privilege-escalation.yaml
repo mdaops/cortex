@@ -22,10 +22,6 @@ spec:
           - resources:
               namespaces:
                 - kube-system
-                - flux-system
-                - kyverno
-                - crossplane-system
-                - argocd
       validate:
         message: "Privilege escalation is not allowed. Set securityContext.allowPrivilegeEscalation to false."
         pattern:

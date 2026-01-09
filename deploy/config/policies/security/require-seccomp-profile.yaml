@@ -22,10 +22,6 @@ spec:
           - resources:
               namespaces:
                 - kube-system
-                - flux-system
-                - kyverno
-                - crossplane-system
-                - argocd
       validate:
         message: "A seccomp profile (RuntimeDefault or Localhost) must be set."
         anyPattern:

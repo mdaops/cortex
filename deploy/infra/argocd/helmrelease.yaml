@@ -13,7 +13,7 @@ metadata:
   name: argocd
 spec:
   interval: 30m
-  targetNamespace: argocd
+  targetNamespace: argo-system
   install:
     createNamespace: true
   kubeConfig:

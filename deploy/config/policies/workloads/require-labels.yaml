@@ -29,7 +29,7 @@ spec:
                 - flux-system
                 - kyverno
                 - crossplane-system
-                - argocd
+                - argo-system
       validate:
         message: "The labels 'app.kubernetes.io/name', 'app.kubernetes.io/part-of', and 'owner' are required."
         pattern:

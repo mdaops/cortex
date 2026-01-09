@@ -27,7 +27,7 @@ spec:
                 - flux-system
                 - kyverno
                 - crossplane-system
-                - argocd
+                - argo-system
       validate:
         message: "Readiness probes are required for all containers in Deployments, StatefulSets, and DaemonSets."
         pattern:
@@ -52,7 +52,7 @@ spec:
                 - flux-system
                 - kyverno
                 - crossplane-system
-                - argocd
+                - argo-system
       validate:
         message: "Liveness probes are required for all containers in Deployments, StatefulSets, and DaemonSets."
         pattern:
