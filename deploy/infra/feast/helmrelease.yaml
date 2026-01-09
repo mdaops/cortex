@@ -53,4 +53,4 @@ spec:
         drop:
           - ALL
       readOnlyRootFilesystem: false
-    feature_store_yaml_base64: ""
+    feature_store_yaml_base64: "cHJvamVjdDogc3luYXBzZQpyZWdpc3RyeTogL3RtcC9yZWdpc3RyeS5kYgpwcm92aWRlcjogbG9jYWwKb25saW5lX3N0b3JlOgogIHR5cGU6IHNxbGl0ZQogIHBhdGg6IC90bXAvb25saW5lX3N0b3JlLmRiCmVudGl0eV9rZXlfc2VyaWFsaXphdGlvbl92ZXJzaW9uOiAyCg=="

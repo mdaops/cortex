@@ -67,10 +67,4 @@ spec:
     replica:
       replicaCount: 0
     metrics:
-      enabled: true
-      resources:
-        requests:
-          cpu: 10m
-          memory: 32Mi
-        limits:
-          memory: 64Mi
+      enabled: false
