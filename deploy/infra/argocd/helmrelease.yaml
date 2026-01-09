@@ -27,6 +27,9 @@ spec:
         kind: HelmRepository
         name: argo
       interval: 12h
+  valuesFrom:
+    - kind: ConfigMap
+      name: argocd-crossplane-health
   values:
     configs:
       cm:
