@@ -7,8 +7,10 @@ resources:
   - cert-manager
   - cloudnative-pg
   - crossplane
+  - feast
   - flink
   - istio
+  - kserve
   - kyverno
   - seaweedfs
   - strimzi
