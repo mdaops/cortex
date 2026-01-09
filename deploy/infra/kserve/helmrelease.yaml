@@ -11,7 +11,7 @@ spec:
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: kserve
+  name: kserve-crd
 spec:
   interval: 30m
   targetNamespace: kserve
@@ -28,8 +28,36 @@ spec:
       name: cluster-kubeconfig
   chart:
     spec:
+      chart: kserve-crd
+      version: "v0.15.2"
+      sourceRef:
+        kind: HelmRepository
+        name: kserve
+      interval: 12h
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kserve
+spec:
+  interval: 30m
+  targetNamespace: kserve
+  dependsOn:
+    - name: kserve-crd
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+  kubeConfig:
+    secretRef:
+      name: cluster-kubeconfig
+  chart:
+    spec:
       chart: kserve
-      version: "0.14.1"
+      version: "v0.15.2"
       sourceRef:
         kind: HelmRepository
         name: kserve
