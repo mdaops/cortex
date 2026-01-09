@@ -29,12 +29,14 @@ spec:
   chart:
     spec:
       chart: valkey
-      version: "4.0.2"
+      version: "3.0.3"
       sourceRef:
         kind: HelmRepository
         name: bitnami
       interval: 12h
   values:
+    image:
+      tag: latest
     architecture: standalone
     auth:
       enabled: true

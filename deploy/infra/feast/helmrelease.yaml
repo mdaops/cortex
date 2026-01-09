@@ -42,7 +42,9 @@ spec:
       limits:
         memory: 512Mi
     securityContext:
-      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
       seccompProfile:
         type: RuntimeDefault
     containerSecurityContext:
@@ -50,5 +52,5 @@ spec:
       capabilities:
         drop:
           - ALL
-      readOnlyRootFilesystem: true
+      readOnlyRootFilesystem: false
     feature_store_yaml_base64: ""
