@@ -8,8 +8,7 @@ spec:
     - name: main
       namespace: kgateway-system
   hostnames:
-    - argo.dev.synapse.mabbott.dev
-    - synapse-gateway-1.tail93695b.ts.net
+    - dev.argocd.synapse.mabbott.dev
   rules:
     - matches:
         - path:
