@@ -13,17 +13,22 @@ kind: HelmRelease
 metadata:
   name: kgateway-crds
 spec:
+  dependsOn:
+    - name: gateway-api-crds
   interval: 30m
   targetNamespace: kgateway-system
   install:
     createNamespace: true
+    crds: CreateReplace
+  upgrade:
+    crds: CreateReplace
   kubeConfig:
     secretRef:
       name: cluster-kubeconfig
   chart:
     spec:
       chart: kgateway-crds
-      version: "2.0.3"
+      version: "v2.2.0-main"
       sourceRef:
         kind: HelmRepository
         name: kgateway
@@ -46,8 +51,12 @@ spec:
   chart:
     spec:
       chart: kgateway
-      version: "2.0.3"
+      version: "v2.2.0-main"
       sourceRef:
         kind: HelmRepository
         name: kgateway
       interval: 12h
+  values:
+    controller:
+      image:
+        pullPolicy: Always
