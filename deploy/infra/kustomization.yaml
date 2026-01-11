@@ -10,6 +10,7 @@ resources:
   - feast
   - flink
   - istio
+  - kgateway
   - kserve
   - kyverno
   - seaweedfs

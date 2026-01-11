@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd
+  namespace: argo-system
+spec:
+  parentRefs:
+    - name: main
+      namespace: kgateway-system
+  hostnames:
+    - argocd.local
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: argo-system-argocd-server
+          port: 80
