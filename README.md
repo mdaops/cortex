@@ -97,6 +97,40 @@ kubectl --context kind-cortex create secret generic tailscale-oauth \
   --from-literal=clientSecret=<your-client-secret>
 ```
 
+### Custom Domain Access
+
+Services are exposed via kgateway with TLS termination on custom domains.
+
+**Architecture:**
+```
+Client → DNS → Tailscale (encrypted) → LoadBalancer → kgateway (TLS) → Service
+```
+
+**Accessing Services:**
+
+| Service | Tailscale URL | Custom Domain |
+|---------|---------------|---------------|
+| ArgoCD | `https://synapse-gateway-1.tail93695b.ts.net` | `https://dev.argocd.synapse.mabbott.dev` |
+
+**DNS Configuration:**
+
+Add a CNAME record in your DNS provider:
+```
+dev.argocd.synapse.mabbott.dev CNAME synapse-gateway-1.tail93695b.ts.net
+```
+
+Or use an A record pointing to the Tailscale IP (check with `kubectl get svc synapse-gateway -n kgateway-system`).
+
+**Certificate:**
+
+Development uses a self-signed CA. Browser will show a certificate warning.
+
+For production, configure Let's Encrypt with DNS-01 challenge:
+
+1. Create a ClusterIssuer with your DNS provider credentials
+2. Update `deploy/config/gateway/issuer.yaml` to use Let's Encrypt
+3. Update `deploy/config/gateway/certificate.yaml` issuer reference
+
 ## Adding a Fleet Environment
 
 1. Create overlay in `fleet/<env>/`
