@@ -1,4 +1,3 @@
----
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
@@ -13,9 +12,6 @@ kind: HelmRelease
 metadata:
   name: kgateway-crds
 spec:
-  dependsOn:
-    - name: gateway-api-crds
-      kind: Kustomization
   interval: 30m
   targetNamespace: kgateway-system
   install:

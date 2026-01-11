@@ -9,9 +9,7 @@ resources:
   - crossplane
   - feast
   - flink
-  - gateway-api
   - istio
-  - kgateway
   - kserve
   - kyverno
   - seaweedfs

@@ -51,11 +51,30 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: config
+  name: gateway
   namespace: dev
 spec:
   dependsOn:
     - name: infra
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  wait: true
+  path: ./deploy/gateway
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: config
+  namespace: dev
+spec:
+  dependsOn:
+    - name: gateway
   interval: 10m
   retryInterval: 1m
   timeout: 5m
