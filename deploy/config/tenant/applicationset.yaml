@@ -5,7 +5,7 @@ metadata:
   namespace: argo-system
 spec:
   goTemplate: true
-  goTemplateOptions: ["missingkey=error"]
+  goTemplateOptions: ["missingkey=zero"]
   generators:
     - git:
         repoURL: ${TENANT_REPO_URL}
@@ -23,10 +23,10 @@ spec:
       source:
         repoURL: ${TENANT_REPO_URL}
         targetRevision: ${TENANT_REVISION}
-        path: '{{.path}}'
+        path: '{{ if .path }}{{.path}}{{ else }}apps/{{.name}}/deploy/overlays/${TENANT_ENV}{{ end }}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{.namespace}}'
+        namespace: '{{ if .namespace }}{{.namespace}}{{ else }}{{.name}}{{ end }}'
       syncPolicy:
         automated:
           prune: true
