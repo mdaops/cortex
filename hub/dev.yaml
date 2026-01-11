@@ -69,3 +69,30 @@ spec:
   kubeConfig:
     secretRef:
       name: cluster-kubeconfig
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tenant-axon
+  namespace: dev
+spec:
+  dependsOn:
+    - name: infra
+  interval: 10m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  wait: true
+  path: ./deploy/config/tenant
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+    namespace: flux-system
+  kubeConfig:
+    secretRef:
+      name: cluster-kubeconfig
+  postBuild:
+    substitute:
+      TENANT_NAME: axon
+      TENANT_REPO_URL: https://github.com/mdaops/axon.git
+      TENANT_ENV: dev

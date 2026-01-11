@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: ${TENANT_NAME}-apps
+  namespace: argo-system
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: ${TENANT_REPO_URL}
+        revision: HEAD
+        files:
+          - path: apps/*/app.yaml
+  template:
+    metadata:
+      name: '{{.name}}-${TENANT_ENV}'
+      labels:
+        tenant: ${TENANT_NAME}
+        team: '{{.team}}'
+    spec:
+      project: ${TENANT_NAME}
+      source:
+        repoURL: ${TENANT_REPO_URL}
+        targetRevision: HEAD
+        path: 'apps/{{.name}}/deploy/overlays/${TENANT_ENV}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.name}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
