@@ -112,24 +112,18 @@ kubectl --context kind-cortex create secret generic tailscale-oauth \
 
 ### Accessing Services
 
-Once deployed, services are available at:
-- Gateway: `synapse-gateway.<tailnet-name>.ts.net`
-- Argo CD: `https://synapse-gateway.<tailnet-name>.ts.net` (via HTTPRoute)
+Services are exposed via Tailscale Ingress and available on your tailnet:
+- Argo CD: `https://argocd.<tailnet-name>.ts.net`
 
 ### Disabling Tailscale
 
 To run without Tailscale:
 
 1. Remove `tailscale` from `deploy/infra/kustomization.yaml`
-2. Remove annotations from `deploy/config/gateway/gateway.yaml`:
-   ```yaml
-   annotations:
-     tailscale.com/expose: "true"
-     tailscale.com/hostname: synapse-gateway
-   ```
+2. Remove `argocd-ingress.yaml` from `deploy/config/gateway/kustomization.yaml`
 3. Use port-forwarding instead:
    ```bash
-   kubectl --context kind-axon port-forward -n kgateway-system svc/main 8080:80
+   kubectl --context kind-axon port-forward -n argo-system svc/argo-system-argocd-server 8080:80
    ```
 
 ## Adding a Fleet Environment
