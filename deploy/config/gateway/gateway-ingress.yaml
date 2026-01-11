@@ -1,15 +1,15 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: argocd
-  namespace: argo-system
+  name: gateway
+  namespace: kgateway-system
 spec:
   ingressClassName: tailscale
   defaultBackend:
     service:
-      name: argo-system-argocd-server
+      name: main
       port:
         number: 80
   tls:
     - hosts:
-        - argocd
+        - synapse-gateway
