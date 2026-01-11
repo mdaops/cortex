@@ -11,6 +11,9 @@ kind: Gateway
 metadata:
   name: main
   namespace: kgateway-system
+  annotations:
+    tailscale.com/expose: "true"
+    tailscale.com/hostname: synapse-gateway
 spec:
   gatewayClassName: kgateway
   listeners:

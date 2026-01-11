@@ -90,6 +90,48 @@ Each namespace has its own set:
 | `just flux-reconcile` | Force reconciliation |
 | `just validate` | Validate manifests |
 
+## Tailscale Integration
+
+Fleet cluster services are exposed via Tailscale for secure access without port-forwarding.
+
+### Prerequisites
+
+1. Create OAuth client at https://login.tailscale.com/admin/settings/oauth
+   - Scopes: `devices:write`, `dns:write`
+   - Tag: `tag:k8s` (or your preferred tag)
+
+2. Create the secret on cortex cluster before bootstrapping:
+
+```bash
+kubectl --context kind-cortex create namespace dev
+kubectl --context kind-cortex create secret generic tailscale-oauth \
+  --namespace dev \
+  --from-literal=clientId=<your-client-id> \
+  --from-literal=clientSecret=<your-client-secret>
+```
+
+### Accessing Services
+
+Once deployed, services are available at:
+- Gateway: `synapse-gateway.<tailnet-name>.ts.net`
+- Argo CD: `https://synapse-gateway.<tailnet-name>.ts.net` (via HTTPRoute)
+
+### Disabling Tailscale
+
+To run without Tailscale:
+
+1. Remove `tailscale` from `deploy/infra/kustomization.yaml`
+2. Remove annotations from `deploy/config/gateway/gateway.yaml`:
+   ```yaml
+   annotations:
+     tailscale.com/expose: "true"
+     tailscale.com/hostname: synapse-gateway
+   ```
+3. Use port-forwarding instead:
+   ```bash
+   kubectl --context kind-axon port-forward -n kgateway-system svc/main 8080:80
+   ```
+
 ## Adding a Fleet Environment
 
 1. Create overlay in `fleet/<env>/`

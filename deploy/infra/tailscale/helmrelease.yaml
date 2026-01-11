@@ -1,0 +1,41 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: tailscale
+spec:
+  interval: 1h
+  url: https://pkgs.tailscale.com/helmcharts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tailscale-operator
+spec:
+  interval: 30m
+  targetNamespace: tailscale-system
+  install:
+    createNamespace: true
+  kubeConfig:
+    secretRef:
+      name: cluster-kubeconfig
+  chart:
+    spec:
+      chart: tailscale-operator
+      version: "1.82.0"
+      sourceRef:
+        kind: HelmRepository
+        name: tailscale
+      interval: 12h
+  valuesFrom:
+    - kind: Secret
+      name: tailscale-oauth
+      valuesKey: clientId
+      targetPath: oauth.clientId
+    - kind: Secret
+      name: tailscale-oauth
+      valuesKey: clientSecret
+      targetPath: oauth.clientSecret
+  values:
+    operatorConfig:
+      hostname: synapse-operator
