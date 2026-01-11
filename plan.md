@@ -8,15 +8,24 @@ Want `dev.argocd.synapse.mabbott.dev` accessible from any device on tailnet (pho
 
 - Tailscale Ingress works from phone via `synapse-gateway-1.tail93695b.ts.net`
 - Custom domain fails due to TLS cert mismatch (Tailscale cert is for `.ts.net` only)
-- Service annotation approach doesn't work from phone over DERP relay
+- Service annotation approach (`tailscale.com/expose`) doesn't work from phone over DERP relay
 
 ## Root Cause
 
 Tailscale Ingress terminates TLS with a cert for `*.ts.net`. When accessing via custom domain, TLS handshake fails.
 
+## Tailscale Operator Modes
+
+| Mode | Resource | TLS Behavior | Works from phone? |
+|------|----------|--------------|-------------------|
+| Ingress | `Ingress` with `ingressClassName: tailscale` | Terminates TLS (`.ts.net` cert) | ✓ Yes |
+| LoadBalancer | Service annotation `tailscale.com/expose: "true"` | TCP passthrough (no TLS) | ✗ No (DERP relay issue?) |
+
 ## Solution
 
-kgateway should terminate TLS with a cert for the custom domain. Tailscale should do TCP passthrough, not TLS termination.
+kgateway should terminate TLS with a cert for the custom domain. Tailscale should do TCP passthrough.
+
+**Problem:** The LoadBalancer/annotation approach (TCP passthrough) doesn't work from phone. Only the Ingress approach works, but it terminates TLS with wrong cert.
 
 ### Target Architecture
 
@@ -24,19 +33,42 @@ kgateway should terminate TLS with a cert for the custom domain. Tailscale shoul
 Phone → Tailscale (TCP passthrough) → kgateway (TLS termination with custom cert) → ArgoCD
 ```
 
-### Implementation Steps
+### Implementation Options
 
-1. **Install cert-manager** on axon cluster (if not already present)
+#### Option A: Fix LoadBalancer approach (TCP passthrough)
+- Figure out why `tailscale.com/expose` annotation doesn't work from phone over DERP relay
+- Once working, kgateway handles TLS with custom domain cert
+- Blocker: Unknown why it fails from phone
 
-2. **Create ClusterIssuer** for Let's Encrypt (or self-signed for internal use)
+#### Option B: Use Tailscale Ingress with custom cert
+- Configure Tailscale Ingress to use custom TLS cert instead of auto-provisioned `.ts.net` cert
+- Need to check if this is supported
+- Tailscale docs mention: "TLS certificates and renewal - The operator automatically provisions TLS certificates"
+- May not be configurable
 
-3. **Create Certificate** for `dev.argocd.synapse.mabbott.dev`
+#### Option C: cert-manager + kgateway HTTPS + Tailscale Ingress passthrough
+- Tailscale Ingress → kgateway port 443 (HTTPS)
+- kgateway terminates TLS with custom cert from cert-manager
+- Issue: Tailscale Ingress expects to terminate TLS itself
 
-4. **Update kgateway Gateway** to use HTTPS listener with the cert
+#### Option D: Split DNS with Pi-hole/CoreDNS
+- Run DNS server on tailnet
+- Resolve `dev.argocd.synapse.mabbott.dev` → Tailscale IP internally
+- Access via `.ts.net` hostname, DNS just makes it pretty
+- Requires running additional infrastructure
 
-5. **Configure Tailscale for TCP passthrough** instead of TLS termination
-   - Option A: Use `tailscale.com/expose` annotation with TCP mode
-   - Option B: Configure Tailscale Ingress for TCP passthrough
+### Implementation Steps (Option C - most promising)
+
+1. **Install cert-manager** on axon cluster
+
+2. **Create ClusterIssuer** for Let's Encrypt with DNS01 challenge (Cloudflare)
+
+3. **Create Certificate** for `*.dev.synapse.mabbott.dev`
+
+4. **Update kgateway Gateway** to use HTTPS listener on port 443 with the cert
+
+5. **Update Tailscale Ingress** to forward to kgateway port 443
+   - Test if it does TCP passthrough to HTTPS backend
 
 6. **Update DNS** - A record pointing `dev.argocd.synapse.mabbott.dev` to Tailscale IP
 
@@ -44,5 +76,14 @@ Phone → Tailscale (TCP passthrough) → kgateway (TLS termination with custom 
 
 ## Open Questions
 
-- Do we want Let's Encrypt (requires DNS challenge for internal domains) or self-signed cert?
-- Can Tailscale Ingress do TCP passthrough, or do we need a different approach?
+1. Why doesn't `tailscale.com/expose` annotation work from phone over DERP relay?
+2. Can Tailscale Ingress do TCP passthrough to an HTTPS backend?
+3. Do we need Cloudflare API token for DNS01 challenge?
+
+## Current Working Setup
+
+```
+Phone → Tailscale → synapse-gateway-1.tail93695b.ts.net → Tailscale Ingress (TLS) → kgateway (HTTP) → HTTPRoute → ArgoCD
+```
+
+Only works with `.ts.net` hostname. Custom domain breaks TLS handshake.
