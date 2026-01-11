@@ -25,19 +25,6 @@ Synapse Platform Control Plane - manages fleet clusters via Flux GitOps.
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Quick Start
-
-```bash
-nix develop
-
-just fleet-up
-
-export GITHUB_TOKEN=<your-token>
-just bootstrap mdaops cortex
-
-just flux-watch
-```
-
 ## Structure
 
 ```
@@ -109,22 +96,6 @@ kubectl --context kind-cortex create secret generic tailscale-oauth \
   --from-literal=clientId=<your-client-id> \
   --from-literal=clientSecret=<your-client-secret>
 ```
-
-### Accessing Services
-
-Services are exposed via Tailscale Ingress and available on your tailnet:
-- Argo CD: `https://argocd.<tailnet-name>.ts.net`
-
-### Disabling Tailscale
-
-To run without Tailscale:
-
-1. Remove `tailscale` from `deploy/infra/kustomization.yaml`
-2. Remove `argocd-ingress.yaml` from `deploy/config/gateway/kustomization.yaml`
-3. Use port-forwarding instead:
-   ```bash
-   kubectl --context kind-axon port-forward -n argo-system svc/argo-system-argocd-server 8080:80
-   ```
 
 ## Adding a Fleet Environment
 
