@@ -13,8 +13,8 @@ result
 .DS_Store
 Thumbs.db
 
-# Secrets (never commit)
 *.key
 *.pem
-secrets/
 PLAN.md
+
+.context
