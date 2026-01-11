@@ -9,6 +9,7 @@ spec:
       namespace: kgateway-system
   hostnames:
     - dev.argocd.synapse.mabbott.dev
+    - synapse-gateway-1.tail93695b.ts.net
   rules:
     - matches:
         - path:
