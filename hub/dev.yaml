@@ -114,4 +114,6 @@ spec:
     substitute:
       TENANT_NAME: axon
       TENANT_REPO_URL: https://github.com/mdaops/axon.git
+      TENANT_REVISION: HEAD
       TENANT_ENV: dev
+      TENANT_APP_DISCOVERY_PATH: apps/*/app.yaml

@@ -9,9 +9,9 @@ spec:
   generators:
     - git:
         repoURL: ${TENANT_REPO_URL}
-        revision: HEAD
+        revision: ${TENANT_REVISION}
         files:
-          - path: apps/*/app.yaml
+          - path: ${TENANT_APP_DISCOVERY_PATH}
   template:
     metadata:
       name: '{{.name}}-${TENANT_ENV}'
@@ -22,11 +22,11 @@ spec:
       project: ${TENANT_NAME}
       source:
         repoURL: ${TENANT_REPO_URL}
-        targetRevision: HEAD
-        path: 'apps/{{.name}}/deploy/overlays/${TENANT_ENV}'
+        targetRevision: ${TENANT_REVISION}
+        path: '{{.path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{.name}}'
+        namespace: '{{.namespace}}'
       syncPolicy:
         automated:
           prune: true
