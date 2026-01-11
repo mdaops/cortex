@@ -1,17 +1,4 @@
 ---
-apiVersion: gateway.kgateway.dev/v1alpha1
-kind: GatewayParameters
-metadata:
-  name: tailscale
-  namespace: kgateway-system
-spec:
-  kube:
-    service:
-      type: LoadBalancer
-      loadBalancerClass: tailscale
-      extraAnnotations:
-        tailscale.com/hostname: synapse-gateway
----
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
@@ -26,11 +13,6 @@ metadata:
   namespace: kgateway-system
 spec:
   gatewayClassName: kgateway
-  infrastructure:
-    parametersRef:
-      name: tailscale
-      group: gateway.kgateway.dev
-      kind: GatewayParameters
   listeners:
     - name: http
       protocol: HTTP
