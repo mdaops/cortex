@@ -1,15 +1,23 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: v1
+kind: Service
 metadata:
-  name: gateway
+  name: synapse-gateway
   namespace: kgateway-system
+  annotations:
+    tailscale.com/hostname: synapse-gateway
 spec:
-  ingressClassName: tailscale
-  defaultBackend:
-    service:
-      name: main
-      port:
-        number: 80
-  tls:
-    - hosts:
-        - synapse-gateway
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  selector:
+    app.kubernetes.io/instance: main
+    app.kubernetes.io/name: main
+    gateway.networking.k8s.io/gateway-name: main
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+    - name: https
+      port: 443
+      targetPort: 443
+      protocol: TCP

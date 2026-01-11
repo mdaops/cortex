@@ -20,3 +20,15 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: "*.synapse.mabbott.dev"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: synapse-gateway-tls
+            kind: Secret
+      allowedRoutes:
+        namespaces:
+          from: All
