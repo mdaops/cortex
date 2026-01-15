@@ -39,6 +39,13 @@ spec:
               - "*"
             kinds:
               - ProviderConfigUsage
+        accounts.crossplane: apiKey
+      rbac:
+        policy.csv: |
+          p, role:crossplane, applications, *, */*, allow
+          p, role:crossplane, projects, *, *, allow
+          p, role:crossplane, repositories, *, *, allow
+          g, crossplane, role:crossplane
       params:
         server.insecure: true
     controller:

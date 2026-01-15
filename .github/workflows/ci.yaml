@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'configurations/management/**'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: configurations/management/functions/xtenant/go.sum
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          working-directory: configurations/management/functions/xtenant
+
+      - name: Test
+        working-directory: configurations/management/functions/xtenant
+        run: go test -v -cover ./...
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Crossplane CLI
+        run: |
+          curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
+          sudo mv crossplane /usr/local/bin/
+
+      - name: Build function
+        working-directory: configurations/management/functions/xtenant
+        run: |
+          docker build . --platform=linux/amd64 --tag runtime-amd64
+          crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function.xpkg
+
+      - name: Build configuration
+        working-directory: configurations/management
+        run: crossplane xpkg build --package-file=configuration.xpkg

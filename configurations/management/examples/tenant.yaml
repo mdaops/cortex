@@ -1,0 +1,10 @@
+apiVersion: platform.synapse.io/v1alpha1
+kind: Tenant
+metadata:
+  name: finance
+  namespace: default
+spec:
+  name: finance
+  description: Finance team workloads
+  sourceRepos:
+    - https://github.com/mdaops/finance-apps.git
