@@ -1,0 +1,8 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: configuration-management
+spec:
+  package: ghcr.io/mdaops/cortex/configurations/management:v0.1.0
+  revisionActivationPolicy: Automatic
+  revisionHistoryLimit: 3

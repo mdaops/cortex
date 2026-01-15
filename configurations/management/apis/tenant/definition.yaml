@@ -1,0 +1,54 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xtenants.platform.synapse.io
+spec:
+  group: platform.synapse.io
+  names:
+    kind: XTenant
+    plural: xtenants
+  claimNames:
+    kind: Tenant
+    plural: tenants
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Tenant name (used for namespace and ArgoCD project)
+                description:
+                  type: string
+                  description: Human-readable description of the tenant
+                sourceRepos:
+                  type: array
+                  description: Git repositories the tenant can deploy from
+                  items:
+                    type: string
+            status:
+              type: object
+              properties:
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                      lastTransitionTime:
+                        type: string

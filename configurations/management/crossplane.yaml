@@ -1,0 +1,23 @@
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: configuration-management
+  annotations:
+    meta.crossplane.io/maintainer: mdaops
+    meta.crossplane.io/source: github.com/mdaops/synapse/cortex
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      Management configuration for Synapse platform.
+      Provides Tenant API for namespace and ArgoCD project provisioning.
+spec:
+  crossplane:
+    version: ">=v1.14.0"
+  dependsOn:
+    - function: ghcr.io/mdaops/cortex/configurations/management/function-xtenant
+      version: ">=v0.1.0"
+    - provider: xpkg.upbound.io/crossplane-contrib/provider-argocd
+      version: ">=v0.14.0"
+    - provider: xpkg.upbound.io/crossplane-contrib/provider-kubernetes
+      version: ">=v0.14.0"
+    - function: xpkg.upbound.io/crossplane-contrib/function-auto-ready
+      version: ">=v0.2.0"

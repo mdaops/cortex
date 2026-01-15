@@ -1,0 +1,18 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: tenant
+  labels:
+    crossplane.io/xrd: xtenants.platform.synapse.io
+spec:
+  compositeTypeRef:
+    apiVersion: platform.synapse.io/v1alpha1
+    kind: XTenant
+  mode: Pipeline
+  pipeline:
+    - step: xtenant
+      functionRef:
+        name: function-xtenant
+    - step: auto-ready
+      functionRef:
+        name: crossplane-contrib-function-auto-ready

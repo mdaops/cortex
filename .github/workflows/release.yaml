@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'management/v*'
+
+env:
+  REGISTRY: ghcr.io
+  FUNCTION_IMAGE: ghcr.io/mdaops/cortex/configurations/management/function-xtenant
+  CONFIG_IMAGE: ghcr.io/mdaops/cortex/configurations/management
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache-dependency-path: configurations/management/functions/xtenant/go.sum
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Crossplane CLI
+        run: |
+          curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
+          sudo mv crossplane /usr/local/bin/
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/management/}" >> $GITHUB_OUTPUT
+
+      - name: Build and push function (multi-arch)
+        working-directory: configurations/management/functions/xtenant
+        run: |
+          docker build . --platform=linux/amd64 --tag runtime-amd64
+          docker build . --platform=linux/arm64 --tag runtime-arm64
+
+          crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function-amd64.xpkg
+          crossplane xpkg build --package-root=package --embed-runtime-image=runtime-arm64 --package-file=function-arm64.xpkg
+
+          crossplane xpkg push --package-files=function-amd64.xpkg,function-arm64.xpkg ${{ env.FUNCTION_IMAGE }}:${{ steps.version.outputs.VERSION }}
+
+      - name: Build and push configuration
+        working-directory: configurations/management
+        run: |
+          crossplane xpkg build --package-file=configuration.xpkg
+          crossplane xpkg push configuration.xpkg ${{ env.CONFIG_IMAGE }}:${{ steps.version.outputs.VERSION }}
