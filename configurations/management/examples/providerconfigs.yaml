@@ -3,9 +3,9 @@ kind: ProviderConfig
 metadata:
   name: default
 spec:
-  serverAddr: argocd-server.argo-system.svc:443
+  serverAddr: argo-system-argocd-server.argo-system.svc
   insecure: true
-  plainText: false
+  plainText: true
   credentials:
     source: Secret
     secretRef:
