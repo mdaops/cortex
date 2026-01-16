@@ -1,0 +1,23 @@
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  credentials:
+    source: InjectedIdentity
+---
+apiVersion: argocd.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  serverAddr: argo-system-argocd-server.argo-system.svc
+  insecure: true
+  plainText: true
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: argocd-credentials
+      key: authToken

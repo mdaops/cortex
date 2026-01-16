@@ -9,6 +9,11 @@ on:
       - 'configurations/management/**'
       - 'configurations/pkg/**'
 
+env:
+  REGISTRY: ghcr.io
+  FUNCTION_IMAGE: ghcr.io/${{ github.repository }}/function-xtenant
+  CONFIG_IMAGE: ghcr.io/${{ github.repository }}/configuration-management
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
@@ -42,22 +47,38 @@ jobs:
         working-directory: configurations/management/functions/xtenant
         run: go test -v -cover ./...
 
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     needs: lint-and-test
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Crossplane CLI
         run: |
           curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
           sudo mv crossplane /usr/local/bin/
 
-      - name: Build function
+      - name: Build and push function
         run: |
           docker build . -f configurations/management/functions/xtenant/Dockerfile --platform=linux/amd64 --tag runtime-amd64
-          cd configurations/management/functions/xtenant && crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function.xpkg
+          cd configurations/management/functions/xtenant
+          crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function.xpkg
+          crossplane xpkg push --package-files=function.xpkg ${{ env.FUNCTION_IMAGE }}:${{ github.sha }}
+          crossplane xpkg push --package-files=function.xpkg ${{ env.FUNCTION_IMAGE }}:latest
 
-      - name: Build configuration
+      - name: Build and push configuration
         working-directory: configurations/management
-        run: crossplane xpkg build --package-root=package --examples-root=examples --package-file=configuration.xpkg
+        run: |
+          crossplane xpkg build --package-root=package --examples-root=examples --package-file=configuration.xpkg
+          crossplane xpkg push --package-files=configuration.xpkg ${{ env.CONFIG_IMAGE }}:${{ github.sha }}
+          crossplane xpkg push --package-files=configuration.xpkg ${{ env.CONFIG_IMAGE }}:latest
