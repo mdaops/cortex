@@ -125,13 +125,17 @@ spec:
               securityContext:
                 seccompProfile:
                   type: RuntimeDefault
-              containers:
-                - name: token-generator
-                  image: docker.io/bitnami/kubectl:1.32.3
+              volumes:
+                - name: token
+                  emptyDir: {}
+              initContainers:
+                - name: get-token
+                  image: docker.io/curlimages/curl:8.11.1
                   securityContext:
                     allowPrivilegeEscalation: false
-                    readOnlyRootFilesystem: true
+                    readOnlyRootFilesystem: false
                     runAsNonRoot: true
+                    runAsUser: 1000
                     capabilities:
                       drop: ["ALL"]
                   resources:
@@ -139,10 +143,13 @@ spec:
                       memory: 128Mi
                     requests:
                       memory: 64Mi
-                  command: ["/bin/bash", "-c"]
+                  volumeMounts:
+                    - name: token
+                      mountPath: /token
+                  command: ["/bin/sh", "-c"]
                   args:
                     - |
-                      set -euo pipefail
+                      set -eu
                       ARGOCD_SERVER="http://argo-system-argocd-server.argo-system.svc"
                       echo "Getting session token..."
                       SESSION=$(curl -sf "$ARGOCD_SERVER/api/v1/session" \
@@ -161,16 +168,41 @@ spec:
                       if [ -z "$ACCOUNT_TOKEN" ]; then
                         echo "Failed to generate account token"; exit 1
                       fi
-                      echo "Creating secret..."
-                      kubectl create namespace crossplane-system --dry-run=client -o yaml | kubectl apply -f -
-                      kubectl create secret generic argocd-credentials \
-                        --namespace crossplane-system \
-                        --from-literal=authToken="$ACCOUNT_TOKEN" \
-                        --dry-run=client -o yaml | kubectl apply -f -
-                      echo "Done"
+                      echo "$ACCOUNT_TOKEN" > /token/authToken
+                      echo "Token saved"
                   env:
                     - name: ARGOCD_ADMIN_PASSWORD
                       valueFrom:
                         secretKeyRef:
                           name: argocd-initial-admin-secret
                           key: password
+              containers:
+                - name: create-secret
+                  image: docker.io/alpine/k8s:1.32.0
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    readOnlyRootFilesystem: false
+                    runAsNonRoot: true
+                    runAsUser: 1000
+                    capabilities:
+                      drop: ["ALL"]
+                  resources:
+                    limits:
+                      memory: 128Mi
+                    requests:
+                      memory: 64Mi
+                  volumeMounts:
+                    - name: token
+                      mountPath: /token
+                      readOnly: true
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      set -eu
+                      TOKEN=$(cat /token/authToken)
+                      echo "Creating argocd-credentials secret..."
+                      kubectl create secret generic argocd-credentials \
+                        --namespace crossplane-system \
+                        --from-literal=authToken="$TOKEN" \
+                        --dry-run=client -o yaml | kubectl apply -f -
+                      echo "Done"
