@@ -60,4 +60,4 @@ jobs:
 
       - name: Build configuration
         working-directory: configurations/management
-        run: crossplane xpkg build --package-file=configuration.xpkg
+        run: crossplane xpkg build --package-root=package --examples-root=examples --package-file=configuration.xpkg
