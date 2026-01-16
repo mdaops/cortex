@@ -1,0 +1,10 @@
+---
+apiVersion: platform.synapse.io/v1alpha1
+kind: Tenant
+metadata:
+  name: ml
+spec:
+  name: ml
+  description: ML platform team workloads
+  sourceRepos:
+    - https://github.com/mdaops/ml-apps.git
