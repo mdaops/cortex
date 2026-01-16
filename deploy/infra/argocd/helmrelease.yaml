@@ -55,3 +55,98 @@ spec:
     server:
       service:
         type: ClusterIP
+    extraObjects:
+      - apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: argocd-token-generator
+          namespace: argo-system
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: Role
+        metadata:
+          name: argocd-token-generator
+          namespace: argo-system
+        rules:
+          - apiGroups: [""]
+            resources: ["secrets"]
+            verbs: ["get"]
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          name: argocd-token-generator
+          namespace: argo-system
+        subjects:
+          - kind: ServiceAccount
+            name: argocd-token-generator
+            namespace: argo-system
+        roleRef:
+          kind: Role
+          name: argocd-token-generator
+          apiGroup: rbac.authorization.k8s.io
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: argocd-token-generator
+        rules:
+          - apiGroups: [""]
+            resources: ["namespaces"]
+            verbs: ["get", "create"]
+          - apiGroups: [""]
+            resources: ["secrets"]
+            verbs: ["get", "create", "patch"]
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: argocd-token-generator
+        subjects:
+          - kind: ServiceAccount
+            name: argocd-token-generator
+            namespace: argo-system
+        roleRef:
+          kind: ClusterRole
+          name: argocd-token-generator
+          apiGroup: rbac.authorization.k8s.io
+      - apiVersion: batch/v1
+        kind: Job
+        metadata:
+          name: argocd-crossplane-token
+          namespace: argo-system
+          annotations:
+            helm.sh/hook: post-install,post-upgrade
+            helm.sh/hook-weight: "10"
+            helm.sh/hook-delete-policy: before-hook-creation
+        spec:
+          ttlSecondsAfterFinished: 300
+          backoffLimit: 5
+          template:
+            spec:
+              serviceAccountName: argocd-token-generator
+              restartPolicy: OnFailure
+              containers:
+                - name: token-generator
+                  image: quay.io/argoproj/argocd:v2.14.11
+                  command: ["/bin/bash", "-c"]
+                  args:
+                    - |
+                      set -euo pipefail
+                      ARGOCD_SERVER="argo-system-argocd-server.argo-system.svc:443"
+                      echo "Waiting for ArgoCD server..."
+                      until argocd login "$ARGOCD_SERVER" --insecure --username admin --password "$ARGOCD_ADMIN_PASSWORD" 2>/dev/null; do
+                        sleep 5
+                      done
+                      echo "Generating token for crossplane account..."
+                      TOKEN=$(argocd account generate-token --account crossplane)
+                      echo "Ensuring crossplane-system namespace exists..."
+                      kubectl create namespace crossplane-system --dry-run=client -o yaml | kubectl apply -f -
+                      echo "Creating secret..."
+                      kubectl create secret generic argocd-credentials \
+                        --namespace crossplane-system \
+                        --from-literal=authToken="$TOKEN" \
+                        --dry-run=client -o yaml | kubectl apply -f -
+                      echo "Token stored in crossplane-system/argocd-credentials"
+                  env:
+                    - name: ARGOCD_ADMIN_PASSWORD
+                      valueFrom:
+                        secretKeyRef:
+                          name: argocd-initial-admin-secret
+                          key: password
