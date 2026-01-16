@@ -74,6 +74,7 @@ jobs:
           cd configurations/management/functions/xtenant
           crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function.xpkg
           crossplane xpkg push --package-files=function.xpkg ${{ env.FUNCTION_IMAGE }}:${{ github.sha }}
+          crossplane xpkg push --package-files=function.xpkg ${{ env.FUNCTION_IMAGE }}:v0.0.1
           crossplane xpkg push --package-files=function.xpkg ${{ env.FUNCTION_IMAGE }}:latest
 
       - name: Build and push configuration
@@ -81,4 +82,5 @@ jobs:
         run: |
           crossplane xpkg build --package-root=package --examples-root=examples --package-file=configuration.xpkg
           crossplane xpkg push --package-files=configuration.xpkg ${{ env.CONFIG_IMAGE }}:${{ github.sha }}
+          crossplane xpkg push --package-files=configuration.xpkg ${{ env.CONFIG_IMAGE }}:v0.0.1
           crossplane xpkg push --package-files=configuration.xpkg ${{ env.CONFIG_IMAGE }}:latest
