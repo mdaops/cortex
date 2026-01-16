@@ -17,5 +17,7 @@ spec:
       version: ">=v0.0.1"
     - provider: xpkg.crossplane.io/crossplane-contrib/provider-argocd
       version: ">=v0.14.0"
+    - provider: xpkg.crossplane.io/crossplane-contrib/provider-kubernetes
+      version: ">=v1.0.0"
     - function: xpkg.crossplane.io/crossplane-contrib/function-auto-ready
       version: ">=v0.6.0"
