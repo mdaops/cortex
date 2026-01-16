@@ -11,7 +11,7 @@ metadata:
       Provides Tenant API for namespace and ArgoCD project provisioning.
 spec:
   crossplane:
-    version: ">=v1.14.0"
+    version: ">=v2.0.0"
   dependsOn:
     - function: ghcr.io/mdaops/cortex/configurations/management/function-xtenant
       version: ">=v0.1.0"

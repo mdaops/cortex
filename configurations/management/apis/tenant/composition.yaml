@@ -3,11 +3,11 @@ kind: Composition
 metadata:
   name: tenant
   labels:
-    crossplane.io/xrd: xtenants.platform.synapse.io
+    crossplane.io/xrd: tenants.platform.synapse.io
 spec:
   compositeTypeRef:
     apiVersion: platform.synapse.io/v1alpha1
-    kind: XTenant
+    kind: Tenant
   mode: Pipeline
   pipeline:
     - step: xtenant

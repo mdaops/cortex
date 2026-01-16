@@ -1,13 +1,11 @@
-apiVersion: apiextensions.crossplane.io/v1
+apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: xtenants.platform.synapse.io
+  name: tenants.platform.synapse.io
 spec:
+  scope: Cluster
   group: platform.synapse.io
   names:
-    kind: XTenant
-    plural: xtenants
-  claimNames:
     kind: Tenant
     plural: tenants
   versions:

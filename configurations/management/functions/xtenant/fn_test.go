@@ -36,7 +36,7 @@ func TestRunFunction(t *testing.T) {
 						Composite: &fnv1.Resource{
 							Resource: resource.MustStructJSON(`{
 								"apiVersion": "platform.synapse.io/v1alpha1",
-								"kind": "XTenant",
+								"kind": "Tenant",
 								"metadata": {"name": "finance"},
 								"spec": {
 									"name": "finance",
@@ -85,7 +85,7 @@ func TestRunFunction(t *testing.T) {
 						Composite: &fnv1.Resource{
 							Resource: resource.MustStructJSON(`{
 								"apiVersion": "platform.synapse.io/v1alpha1",
-								"kind": "XTenant",
+								"kind": "Tenant",
 								"metadata": {"name": "minimal"},
 								"spec": {
 									"name": "minimal",
@@ -112,7 +112,7 @@ func TestRunFunction(t *testing.T) {
 						Composite: &fnv1.Resource{
 							Resource: resource.MustStructJSON(`{
 								"apiVersion": "platform.synapse.io/v1alpha1",
-								"kind": "XTenant",
+								"kind": "Tenant",
 								"metadata": {"name": "no-repos"},
 								"spec": {"name": "no-repos"}
 							}`),
@@ -130,7 +130,7 @@ func TestRunFunction(t *testing.T) {
 						Composite: &fnv1.Resource{
 							Resource: resource.MustStructJSON(`{
 								"apiVersion": "platform.synapse.io/v1alpha1",
-								"kind": "XTenant",
+								"kind": "Tenant",
 								"metadata": {"name": "invalid"},
 								"spec": {}
 							}`),
