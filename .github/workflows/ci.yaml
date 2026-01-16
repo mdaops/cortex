@@ -11,8 +11,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  FUNCTION_IMAGE: ghcr.io/mdaops/function-xtenant
-  CONFIG_IMAGE: ghcr.io/mdaops/configuration-management
+  FUNCTION_IMAGE: ghcr.io/${{ github.repository }}/function-xtenant
+  CONFIG_IMAGE: ghcr.io/${{ github.repository }}/configuration-management
 
 jobs:
   lint-and-test:

@@ -22,6 +22,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /function .
 
 FROM gcr.io/distroless/static-debian12:nonroot AS image
+
+LABEL org.opencontainers.image.source="https://github.com/mdaops/cortex"
+
 WORKDIR /
 COPY --from=build /function /function
 EXPOSE 9443
