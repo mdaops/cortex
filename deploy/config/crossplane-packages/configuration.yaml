@@ -4,4 +4,4 @@ kind: Configuration
 metadata:
   name: configuration-management
 spec:
-  package: ghcr.io/mdaops/cortex/configuration-management:latest
+  package: ghcr.io/mdaops/configuration-management:latest
