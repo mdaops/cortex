@@ -50,6 +50,7 @@ func TestRunFunction(t *testing.T) {
 			},
 			wantResourceCnt: 2,
 			validateFn: func(t *testing.T, rsp *fnv1.RunFunctionResponse) {
+				t.Helper()
 				ns := rsp.GetDesired().GetResources()["namespace"]
 				if ns == nil {
 					t.Fatal("expected namespace resource")
@@ -98,6 +99,7 @@ func TestRunFunction(t *testing.T) {
 			},
 			wantResourceCnt: 2,
 			validateFn: func(t *testing.T, rsp *fnv1.RunFunctionResponse) {
+				t.Helper()
 				proj := rsp.GetDesired().GetResources()["project"]
 				projData := structToMap(t, proj.GetResource())
 				assertEqual(t, "minimal tenant workloads", getNestedString(projData, "spec", "forProvider", "description"))
