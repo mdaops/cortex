@@ -19,6 +19,9 @@ linters:
     - nilnil
     - funcorder
 
+    # Allow local replace directives for monorepo development
+    - gomoddirectives
+
     # Below are linters that lint for things we don't value. Each entry below
     # this line must have a comment explaining the rationale.
 
