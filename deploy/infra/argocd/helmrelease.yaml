@@ -84,26 +84,25 @@ spec:
           name: argocd-token-generator
           apiGroup: rbac.authorization.k8s.io
       - apiVersion: rbac.authorization.k8s.io/v1
-        kind: ClusterRole
+        kind: Role
         metadata:
           name: argocd-token-generator
+          namespace: crossplane-system
         rules:
-          - apiGroups: [""]
-            resources: ["namespaces"]
-            verbs: ["get", "create"]
           - apiGroups: [""]
             resources: ["secrets"]
             verbs: ["get", "create", "patch"]
       - apiVersion: rbac.authorization.k8s.io/v1
-        kind: ClusterRoleBinding
+        kind: RoleBinding
         metadata:
           name: argocd-token-generator
+          namespace: crossplane-system
         subjects:
           - kind: ServiceAccount
             name: argocd-token-generator
             namespace: argo-system
         roleRef:
-          kind: ClusterRole
+          kind: Role
           name: argocd-token-generator
           apiGroup: rbac.authorization.k8s.io
       - apiVersion: batch/v1
@@ -133,63 +132,52 @@ spec:
                   image: docker.io/curlimages/curl:8.11.1
                   securityContext:
                     allowPrivilegeEscalation: false
-                    readOnlyRootFilesystem: false
                     runAsNonRoot: true
                     runAsUser: 1000
                     capabilities:
                       drop: ["ALL"]
                   resources:
-                    limits:
-                      memory: 128Mi
                     requests:
+                      memory: 32Mi
+                    limits:
                       memory: 64Mi
                   volumeMounts:
                     - name: token
                       mountPath: /token
-                  command: ["/bin/sh", "-c"]
-                  args:
-                    - |
-                      set -eu
-                      ARGOCD_SERVER="http://argo-system-argocd-server.argo-system.svc"
-                      echo "Getting session token..."
-                      SESSION=$(curl -sf "$ARGOCD_SERVER/api/v1/session" \
-                        -H "Content-Type: application/json" \
-                        -d "{\"username\":\"admin\",\"password\":\"$ARGOCD_ADMIN_PASSWORD\"}")
-                      TOKEN=$(echo "$SESSION" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
-                      if [ -z "$TOKEN" ]; then
-                        echo "Failed to get session token"; exit 1
-                      fi
-                      echo "Generating account token..."
-                      RESP=$(curl -sf "$ARGOCD_SERVER/api/v1/account/crossplane/token" \
-                        -H "Authorization: Bearer $TOKEN" \
-                        -H "Content-Type: application/json" \
-                        -d '{"name":"crossplane-provider"}')
-                      ACCOUNT_TOKEN=$(echo "$RESP" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
-                      if [ -z "$ACCOUNT_TOKEN" ]; then
-                        echo "Failed to generate account token"; exit 1
-                      fi
-                      echo "$ACCOUNT_TOKEN" > /token/authToken
-                      echo "Token saved"
                   env:
                     - name: ARGOCD_ADMIN_PASSWORD
                       valueFrom:
                         secretKeyRef:
                           name: argocd-initial-admin-secret
                           key: password
+                  command: ["/bin/sh", "-c"]
+                  args:
+                    - |
+                      set -eu
+                      SERVER="http://argo-system-argocd-server.argo-system.svc"
+                      SESSION=$(curl -sf "$SERVER/api/v1/session" \
+                        -H "Content-Type: application/json" \
+                        -d "{\"username\":\"admin\",\"password\":\"$ARGOCD_ADMIN_PASSWORD\"}")
+                      TOKEN=$(echo "$SESSION" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+                      [ -z "$TOKEN" ] && exit 1
+                      RESP=$(curl -sf "$SERVER/api/v1/account/crossplane/token" \
+                        -H "Authorization: Bearer $TOKEN" \
+                        -H "Content-Type: application/json" \
+                        -d '{"name":"crossplane-provider"}')
+                      echo "$RESP" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p' > /token/value
               containers:
                 - name: create-secret
                   image: docker.io/alpine/k8s:1.32.0
                   securityContext:
                     allowPrivilegeEscalation: false
-                    readOnlyRootFilesystem: false
                     runAsNonRoot: true
                     runAsUser: 1000
                     capabilities:
                       drop: ["ALL"]
                   resources:
-                    limits:
-                      memory: 128Mi
                     requests:
+                      memory: 32Mi
+                    limits:
                       memory: 64Mi
                   volumeMounts:
                     - name: token
@@ -198,11 +186,7 @@ spec:
                   command: ["/bin/sh", "-c"]
                   args:
                     - |
-                      set -eu
-                      TOKEN=$(cat /token/authToken)
-                      echo "Creating argocd-credentials secret..."
                       kubectl create secret generic argocd-credentials \
                         --namespace crossplane-system \
-                        --from-literal=authToken="$TOKEN" \
+                        --from-literal=authToken="$(cat /token/value)" \
                         --dry-run=client -o yaml | kubectl apply -f -
-                      echo "Done"
