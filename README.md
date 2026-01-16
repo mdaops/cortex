@@ -106,19 +106,6 @@ Services are exposed via kgateway with TLS termination on custom domains.
 Client → DNS → Tailscale (encrypted) → LoadBalancer → kgateway (TLS) → Service
 ```
 
-**Accessing Services:**
-
-| Service | Tailscale URL | Custom Domain |
-|---------|---------------|---------------|
-| ArgoCD | `https://synapse-gateway-1.tail93695b.ts.net` | `https://dev.argocd.synapse.mabbott.dev` |
-
-**DNS Configuration:**
-
-Add a CNAME record in your DNS provider:
-```
-dev.argocd.synapse.mabbott.dev CNAME synapse-gateway-1.tail93695b.ts.net
-```
-
 Or use an A record pointing to the Tailscale IP (check with `kubectl get svc synapse-gateway -n kgateway-system`).
 
 **Certificate:**
