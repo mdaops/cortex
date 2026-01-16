@@ -54,10 +54,9 @@ jobs:
           sudo mv crossplane /usr/local/bin/
 
       - name: Build function
-        working-directory: configurations/management/functions/xtenant
         run: |
-          docker build . --platform=linux/amd64 --tag runtime-amd64
-          crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function.xpkg
+          docker build . -f configurations/management/functions/xtenant/Dockerfile --platform=linux/amd64 --tag runtime-amd64
+          cd configurations/management/functions/xtenant && crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function.xpkg
 
       - name: Build configuration
         working-directory: configurations/management
