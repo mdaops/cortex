@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	argocd "github.com/crossplane-contrib/provider-argocd/apis/projects/v1alpha1"
 	xpv1 "github.com/crossplane/crossplane-runtime/v2/apis/common/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	argocd "github.com/crossplane-contrib/provider-argocd/apis/projects/v1alpha1"
 )
 
 // DefaultArgoCDNamespace is the default namespace where ArgoCD is installed.

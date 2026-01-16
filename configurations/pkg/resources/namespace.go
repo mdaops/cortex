@@ -1,12 +1,11 @@
 package resources
 
 import (
+	kubeobj "github.com/crossplane-contrib/provider-kubernetes/apis/cluster/object/v1alpha2"
 	xpv1 "github.com/crossplane/crossplane-runtime/v2/apis/common/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
-	kubeobj "github.com/crossplane-contrib/provider-kubernetes/apis/cluster/object/v1alpha2"
 )
 
 // TenantLabelKey is the label key used to identify tenant resources.
