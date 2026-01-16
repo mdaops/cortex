@@ -124,26 +124,36 @@ spec:
               restartPolicy: OnFailure
               containers:
                 - name: token-generator
-                  image: quay.io/argoproj/argocd:v2.14.11
+                  image: bitnami/kubectl:1.32
                   command: ["/bin/bash", "-c"]
                   args:
                     - |
                       set -euo pipefail
-                      ARGOCD_SERVER="argo-system-argocd-server.argo-system.svc:80"
-                      echo "Waiting for ArgoCD server..."
-                      until argocd login "$ARGOCD_SERVER" --plaintext --username admin --password "$ARGOCD_ADMIN_PASSWORD" 2>/dev/null; do
-                        sleep 5
-                      done
-                      echo "Generating token for crossplane account..."
-                      TOKEN=$(argocd account generate-token --account crossplane)
-                      echo "Ensuring crossplane-system namespace exists..."
-                      kubectl create namespace crossplane-system --dry-run=client -o yaml | kubectl apply -f -
+                      ARGOCD_SERVER="http://argo-system-argocd-server.argo-system.svc"
+                      echo "Getting session token..."
+                      SESSION=$(curl -sf "$ARGOCD_SERVER/api/v1/session" \
+                        -H "Content-Type: application/json" \
+                        -d "{\"username\":\"admin\",\"password\":\"$ARGOCD_ADMIN_PASSWORD\"}")
+                      TOKEN=$(echo "$SESSION" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+                      if [ -z "$TOKEN" ]; then
+                        echo "Failed to get session token"; exit 1
+                      fi
+                      echo "Generating account token..."
+                      RESP=$(curl -sf "$ARGOCD_SERVER/api/v1/account/crossplane/token" \
+                        -H "Authorization: Bearer $TOKEN" \
+                        -H "Content-Type: application/json" \
+                        -d '{"name":"crossplane-provider"}')
+                      ACCOUNT_TOKEN=$(echo "$RESP" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+                      if [ -z "$ACCOUNT_TOKEN" ]; then
+                        echo "Failed to generate account token"; exit 1
+                      fi
                       echo "Creating secret..."
+                      kubectl create namespace crossplane-system --dry-run=client -o yaml | kubectl apply -f -
                       kubectl create secret generic argocd-credentials \
                         --namespace crossplane-system \
-                        --from-literal=authToken="$TOKEN" \
+                        --from-literal=authToken="$ACCOUNT_TOKEN" \
                         --dry-run=client -o yaml | kubectl apply -f -
-                      echo "Token stored in crossplane-system/argocd-credentials"
+                      echo "Done"
                   env:
                     - name: ARGOCD_ADMIN_PASSWORD
                       valueFrom:
