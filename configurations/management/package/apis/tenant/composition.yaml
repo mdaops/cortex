@@ -12,7 +12,7 @@ spec:
   pipeline:
     - step: xtenant
       functionRef:
-        name: function-xtenant
+        name: mdaops-function-xtenant
     - step: auto-ready
       functionRef:
         name: crossplane-contrib-function-auto-ready
