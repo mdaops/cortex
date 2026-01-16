@@ -1,3 +1,4 @@
+// Package resources provides builders for Crossplane managed resources.
 package resources
 
 import "encoding/json"

@@ -1,19 +1,19 @@
 package resources
 
 import (
+	xpv1 "github.com/crossplane/crossplane-runtime/v2/apis/common/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	xpv1 "github.com/crossplane/crossplane-runtime/v2/apis/common/v1"
-
 	kubeobj "github.com/crossplane-contrib/provider-kubernetes/apis/cluster/object/v1alpha2"
 )
 
-const (
-	TenantLabelKey     = "platform.synapse.io/tenant"
-	DefaultProviderCfg = "default"
-)
+// TenantLabelKey is the label key used to identify tenant resources.
+const TenantLabelKey = "platform.synapse.io/tenant"
+
+// DefaultProviderCfg is the default provider config name.
+const DefaultProviderCfg = "default"
 
 // NamespaceConfig configures a tenant namespace.
 type NamespaceConfig struct {

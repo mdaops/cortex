@@ -4,20 +4,22 @@ import (
 	"errors"
 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	xpv1 "github.com/crossplane/crossplane-runtime/v2/apis/common/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	argocd "github.com/crossplane-contrib/provider-argocd/apis/projects/v1alpha1"
 )
 
-const (
-	DefaultArgoCDNamespace = "argo-system"
-	DefaultClusterServer   = "https://kubernetes.default.svc"
-)
+// DefaultArgoCDNamespace is the default namespace where ArgoCD is installed.
+const DefaultArgoCDNamespace = "argo-system"
 
+// DefaultClusterServer is the default Kubernetes API server URL for in-cluster.
+const DefaultClusterServer = "https://kubernetes.default.svc"
+
+// ErrSourceReposRequired is returned when sourceRepos is empty.
 var ErrSourceReposRequired = errors.New("sourceRepos is required and cannot be empty")
 
+// ProjectConfig configures an ArgoCD project for a tenant.
 type ProjectConfig struct {
 	TenantName             string
 	Description            string
@@ -46,6 +48,7 @@ func (c *ProjectConfig) validate() error {
 	return nil
 }
 
+// NewProject creates a provider-argocd Project with the given configuration.
 func NewProject(cfg ProjectConfig) (*argocd.Project, error) {
 	if err := cfg.validate(); err != nil {
 		return nil, err
@@ -88,6 +91,7 @@ func NewProject(cfg ProjectConfig) (*argocd.Project, error) {
 	}, nil
 }
 
+// NewTenantProject is a convenience function for creating a tenant ArgoCD project.
 func NewTenantProject(tenantName, description string, sourceRepos []string) (*argocd.Project, error) {
 	return NewProject(ProjectConfig{
 		TenantName:  tenantName,
