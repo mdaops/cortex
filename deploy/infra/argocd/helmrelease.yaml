@@ -122,9 +122,23 @@ spec:
             spec:
               serviceAccountName: argocd-token-generator
               restartPolicy: OnFailure
+              securityContext:
+                seccompProfile:
+                  type: RuntimeDefault
               containers:
                 - name: token-generator
-                  image: bitnami/kubectl:1.32
+                  image: docker.io/bitnami/kubectl:1.32.3
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    readOnlyRootFilesystem: true
+                    runAsNonRoot: true
+                    capabilities:
+                      drop: ["ALL"]
+                  resources:
+                    limits:
+                      memory: 128Mi
+                    requests:
+                      memory: 64Mi
                   command: ["/bin/bash", "-c"]
                   args:
                     - |
