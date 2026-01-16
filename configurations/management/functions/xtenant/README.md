@@ -1,44 +1,113 @@
-# function-template-go
-[![CI](https://github.com/crossplane/function-template-go/actions/workflows/ci.yml/badge.svg)](https://github.com/crossplane/function-template-go/actions/workflows/ci.yml)
+# function-xtenant
 
-A template for writing a [composition function][functions] in [Go][go].
+Crossplane composition function for tenant provisioning. Creates a Kubernetes Namespace and ArgoCD AppProject for each Tenant CR.
 
-To learn how to use this template:
+## Architecture
 
-* [Follow the guide to writing a composition function in Go][function guide]
-* [Learn about how composition functions work][functions]
-* [Read the function-sdk-go package documentation][package docs]
-
-If you just want to jump in and get started:
-
-1. Replace `function-template-go` with your function in `go.mod`,
-   `package/crossplane.yaml`, and any Go imports. (You can also do this
-   automatically by running the `./init.sh <function-name>` script.)
-1. Update `input/v1beta1/` to reflect your desired input (and run `go generate ./...`)
-1. Add your logic to `RunFunction` in `fn.go`
-1. Add tests for your logic in `fn_test.go`
-1. Update this file, `README.md`, to be about your function!
-
-This template uses [Go][go], [Docker][docker], and the [Crossplane CLI][cli] to
-build functions.
-
-```shell
-# Run code generation - see input/generate.go
-$ go generate ./...
-
-# Run tests - see fn_test.go
-$ go test ./...
-
-# Build the function's runtime image - see Dockerfile
-$ docker build . --tag=runtime
-
-# Build a function package - see package/crossplane.yaml
-$ crossplane xpkg build -f package --embed-runtime-image=runtime
+```
+configurations/
+├── pkg/
+│   └── resources/              # Shared typed resource builders
+│       ├── namespace.go        # NewTenantNamespace()
+│       ├── project.go          # NewTenantProject()
+│       └── convert.go          # ConvertViaJSON()
+│
+└── management/
+    └── functions/
+        └── xtenant/
+            ├── fn.go           # Orchestration only
+            ├── fn_test.go      # Tests
+            └── main.go         # gRPC entrypoint
 ```
 
-[functions]: https://docs.crossplane.io/latest/concepts/composition-functions
-[go]: https://go.dev
-[function guide]: https://docs.crossplane.io/knowledge-base/guides/write-a-composition-function-in-go
-[package docs]: https://pkg.go.dev/github.com/crossplane/function-sdk-go
-[docker]: https://www.docker.com
-[cli]: https://docs.crossplane.io/latest/cli
+## Usage
+
+Create a Tenant claim:
+
+```yaml
+apiVersion: platform.synapse.io/v1alpha1
+kind: Tenant
+metadata:
+  name: finance
+  namespace: default
+spec:
+  name: finance
+  description: Finance team workloads
+  sourceRepos:
+    - https://github.com/org/finance-apps.git
+```
+
+The function creates:
+- Kubernetes Namespace `finance` with label `platform.synapse.io/tenant: finance`
+- ArgoCD AppProject `finance` scoped to namespace `finance` and `finance-*`
+
+## Pattern: Shared Typed Resource Builders
+
+Resource builders live in a shared module (`configurations/pkg/resources/`) so multiple composition functions can reuse them.
+
+### Function Code
+
+```go
+import "github.com/mdaops/cortex/configurations/pkg/resources"
+
+desiredTyped := map[resource.Name]any{
+    "namespace": resources.NewTenantNamespace(tenantName),
+    "project":   resources.NewTenantProject(tenantName, description, sourceRepos),
+}
+
+for name, obj := range desiredTyped {
+    c := composed.New()
+    if err := resources.ConvertViaJSON(c, obj); err != nil {
+        return fatal(err)
+    }
+    desired[name] = &resource.DesiredComposed{Resource: c}
+}
+```
+
+### Adding New Resources
+
+1. Add builder to shared module (`configurations/pkg/resources/`):
+
+```go
+func NewTenantServiceAccount(tenantName string) *kubeobj.Object {
+    return &kubeobj.Object{
+        TypeMeta: metav1.TypeMeta{
+            APIVersion: "kubernetes.crossplane.io/v1alpha2",
+            Kind:       "Object",
+        },
+        // ... fully typed
+    }
+}
+```
+
+2. Use in any function:
+
+```go
+desiredTyped["service-account"] = resources.NewTenantServiceAccount(tenantName)
+```
+
+### Benefits
+
+| Aspect | Untyped (old) | Typed + Shared (new) |
+|--------|---------------|----------------------|
+| Type safety | None | Full compile-time |
+| IDE support | None | Autocomplete |
+| Code reuse | Copy-paste | Import |
+| Adding resources | ~30 lines | ~5 lines |
+| Cross-function sharing | Manual | Automatic |
+
+## Development
+
+```bash
+go test ./...
+
+docker build . --platform=linux/amd64 --tag=runtime-amd64
+
+crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function.xpkg
+```
+
+## References
+
+- [Crossplane Composition Functions](https://docs.crossplane.io/latest/concepts/composition-functions)
+- [Upbound Go Composition Guide](https://docs.upbound.io/manuals/cli/howtos/compositions/go)
+- [function-sdk-go](https://pkg.go.dev/github.com/crossplane/function-sdk-go)

@@ -22,6 +22,7 @@ spec:
               type: object
               required:
                 - name
+                - sourceRepos
               properties:
                 name:
                   type: string

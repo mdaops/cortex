@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - 'configurations/management/**'
+      - 'configurations/pkg/**'
 
 jobs:
   lint-and-test:
@@ -16,15 +17,28 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
-          cache-dependency-path: configurations/management/functions/xtenant/go.sum
+          go-version: '1.24'
+          cache-dependency-path: |
+            configurations/management/functions/xtenant/go.sum
+            configurations/pkg/resources/go.sum
 
-      - name: Lint
-        uses: golangci/golangci-lint-action@v4
+      - name: Lint shared resources
+        uses: golangci/golangci-lint-action@v7
         with:
+          version: v2.1
+          working-directory: configurations/pkg/resources
+
+      - name: Test shared resources
+        working-directory: configurations/pkg/resources
+        run: go test -v -cover ./...
+
+      - name: Lint function
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.1
           working-directory: configurations/management/functions/xtenant
 
-      - name: Test
+      - name: Test function
         working-directory: configurations/management/functions/xtenant
         run: go test -v -cover ./...
 
