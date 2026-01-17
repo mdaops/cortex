@@ -9,7 +9,7 @@ metadata:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: tenants
+  name: flux-rbac
   namespace: dev
 spec:
   interval: 10m
@@ -36,7 +36,7 @@ metadata:
   namespace: dev
 spec:
   dependsOn:
-    - name: tenants
+    - name: flux-rbac
   interval: 10m
   retryInterval: 1m
   timeout: 5m
@@ -114,36 +114,7 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: tenant-axon
-  namespace: dev
-spec:
-  dependsOn:
-    - name: controllers
-  interval: 10m
-  retryInterval: 1m
-  timeout: 5m
-  prune: true
-  wait: true
-  path: ./components/config/tenant
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-    namespace: flux-system
-  kubeConfig:
-    secretRef:
-      name: cluster-kubeconfig
-  postBuild:
-    substitute:
-      TENANT_NAME: axon
-      TENANT_REPO_URL: https://github.com/mdaops/axon.git
-      TENANT_REVISION: HEAD
-      TENANT_ENV: dev
-      TENANT_APP_DISCOVERY_PATH: apps/*/app.yaml
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: crossplane-tenants
+  name: tenants
   namespace: dev
 spec:
   dependsOn:
