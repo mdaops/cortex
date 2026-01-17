@@ -88,25 +88,22 @@ flux-resume:
 validate:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Validating platform manifests..."
-    for dir in platform/*/; do
+    echo "Validating clusters/cortex manifests..."
+    for dir in clusters/cortex/*/; do
         if [ -f "$dir/kustomization.yaml" ]; then
-            echo "  Checking $dir..."
-            kustomize build "$dir" | kubeconform -strict -skip CustomResourceDefinition
+            kustomize build "$dir" | kubeconform -strict -ignore-missing-schemas
         fi
     done
-    echo "Validating fleet/dev manifests..."
-    for dir in fleet/dev/*/; do
+    echo "Validating clusters/dev manifests..."
+    for dir in clusters/dev/*/; do
         if [ -f "$dir/kustomization.yaml" ]; then
-            echo "  Checking $dir..."
-            kustomize build "$dir" | kubeconform -strict -skip CustomResourceDefinition
+            kustomize build "$dir" | kubeconform -strict -ignore-missing-schemas
         fi
     done
-    echo "Validating fleet/production manifests..."
-    for dir in fleet/production/*/; do
+    echo "Validating clusters/production manifests..."
+    for dir in clusters/production/*/; do
         if [ -f "$dir/kustomization.yaml" ]; then
-            echo "  Checking $dir..."
-            kustomize build "$dir" | kubeconform -strict -skip CustomResourceDefinition
+            kustomize build "$dir" | kubeconform -strict -ignore-missing-schemas
         fi
     done
     echo ""

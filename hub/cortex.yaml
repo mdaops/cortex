@@ -11,7 +11,7 @@ spec:
   timeout: 5m
   prune: true
   wait: true
-  path: ./platform/tenants
+  path: ./clusters/cortex/tenants
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -22,7 +22,7 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: infra
+  name: controllers
   namespace: flux-system
 spec:
   serviceAccountName: kustomize-controller
@@ -33,7 +33,7 @@ spec:
   timeout: 5m
   prune: true
   wait: true
-  path: ./platform/infra
+  path: ./clusters/cortex/controllers
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -46,13 +46,13 @@ metadata:
 spec:
   serviceAccountName: kustomize-controller
   dependsOn:
-    - name: infra
+    - name: controllers
   interval: 10m
   retryInterval: 1m
   timeout: 5m
   prune: true
   wait: true
-  path: ./platform/config
+  path: ./clusters/cortex/config
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -65,13 +65,13 @@ metadata:
 spec:
   serviceAccountName: kustomize-controller
   dependsOn:
-    - name: infra
+    - name: controllers
   interval: 10m
   retryInterval: 1m
   timeout: 10m
   prune: true
   wait: true
-  path: ./deploy/crossplane/configurations
+  path: ./components/crossplane/configurations
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -94,7 +94,7 @@ spec:
   timeout: 5m
   prune: true
   wait: true
-  path: ./deploy/crossplane/providerconfigs
+  path: ./components/crossplane/providerconfigs
   sourceRef:
     kind: GitRepository
     name: flux-system

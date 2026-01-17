@@ -36,32 +36,42 @@ cortex/
 ├── hub/                    # Flux entry point (bootstrapped to cortex)
 │   ├── flux-system/        # Flux components (auto-generated)
 │   ├── cortex.yaml         # Platform cluster Kustomizations
-│   └── dev.yaml            # Dev fleet environment Kustomizations
+│   └── dev.yaml            # Dev fleet cluster Kustomizations
 │
-├── deploy/                 # Base definitions (shared across all)
-│   ├── controllers/        # HelmReleases: argo-cd, cert-manager, kyverno
-│   ├── config/             # Kyverno policies, cluster configs
-│   └── tenants/            # Namespaces, service accounts, RBAC
-│
-├── platform/               # Platform cluster overlays
-│   ├── controllers/        # → ../deploy/controllers + platform-specific
-│   ├── config/             # → ../deploy/config + platform-specific
-│   └── tenants/            # → ../deploy/tenants + platform-specific
-│
-├── fleet/                  # Fleet cluster overlays (per environment)
-│   ├── dev/
-│   │   ├── controllers/    # → ../../deploy/controllers + dev patches
+├── clusters/               # Per-cluster overlays
+│   ├── cortex/             # Platform cluster
+│   │   ├── controllers/    # Platform-specific controller config
 │   │   ├── config/
 │   │   └── tenants/
-│   └── production/
+│   ├── dev/                # Fleet: dev environment
+│   │   ├── controllers/    # → components/controllers + patches
+│   │   ├── config/
+│   │   ├── gateway/        # Gateway CRDs + controller
+│   │   └── tenants/
+│   └── production/         # Fleet: production environment
 │       ├── controllers/
 │       ├── config/
 │       └── tenants/
 │
-├── kind/                   # Kind cluster configurations (local dev)
-│   ├── cortex.yaml
-│   └── axon.yaml
+├── components/             # Shared base definitions
+│   ├── controllers/        # HelmReleases: argo-cd, cert-manager, etc.
+│   ├── config/             # Policies, gateway routes, tenant templates
+│   │   ├── policies/
+│   │   ├── gateway/
+│   │   └── tenant/
+│   ├── crds/               # CRD-only installs
+│   │   └── gateway-api/
+│   ├── crossplane/         # Crossplane deployment artifacts
+│   │   ├── configurations/
+│   │   └── providerconfigs/
+│   └── tenants/
 │
+├── apis/                   # Crossplane composition packages
+│   └── management/         # Platform API definitions
+│       ├── package/
+│       └── functions/
+│
+├── kind/                   # Kind cluster configurations (local dev)
 ├── scripts/                # Shell scripts
 ├── flake.nix               # Nix dev environment
 └── Justfile                # Task runner
