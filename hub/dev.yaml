@@ -153,7 +153,7 @@ spec:
   timeout: 5m
   prune: true
   wait: true
-  path: ./components/tenants
+  path: ./components/crossplane/tenants
   sourceRef:
     kind: GitRepository
     name: flux-system
