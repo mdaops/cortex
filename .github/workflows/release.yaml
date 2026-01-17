@@ -7,8 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  FUNCTION_IMAGE: ghcr.io/mdaops/cortex/configurations/management/function-xtenant
-  CONFIG_IMAGE: ghcr.io/mdaops/cortex/configurations/management
+  FUNCTION_IMAGE: ghcr.io/mdaops/cortex/apis/management/function-xtenant
+  CONFIG_IMAGE: ghcr.io/mdaops/cortex/apis/management
 
 jobs:
   release:
@@ -24,8 +24,8 @@ jobs:
         with:
           go-version: '1.24'
           cache-dependency-path: |
-            configurations/management/functions/xtenant/go.sum
-            configurations/pkg/resources/go.sum
+            apis/management/functions/xtenant/go.sum
+            apis/pkg/resources/go.sum
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -44,7 +44,7 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/management/}" >> $GITHUB_OUTPUT
 
       - name: Build and push function (multi-arch)
-        working-directory: configurations/management/functions/xtenant
+        working-directory: apis/management/functions/xtenant
         run: |
           docker build . --platform=linux/amd64 --tag runtime-amd64
           docker build . --platform=linux/arm64 --tag runtime-arm64
@@ -55,7 +55,7 @@ jobs:
           crossplane xpkg push --package-files=function-amd64.xpkg,function-arm64.xpkg ${{ env.FUNCTION_IMAGE }}:${{ steps.version.outputs.VERSION }}
 
       - name: Build and push configuration
-        working-directory: configurations/management
+        working-directory: apis/management
         run: |
           crossplane xpkg build --package-file=configuration.xpkg
           crossplane xpkg push configuration.xpkg ${{ env.CONFIG_IMAGE }}:${{ steps.version.outputs.VERSION }}

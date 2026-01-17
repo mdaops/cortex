@@ -7,10 +7,10 @@ FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION} AS build
 WORKDIR /src
 ENV CGO_ENABLED=0
 
-COPY configurations/pkg/resources/ /src/configurations/pkg/resources/
-COPY configurations/management/functions/xtenant/ /src/configurations/management/functions/xtenant/
+COPY apis/pkg/resources/ /src/apis/pkg/resources/
+COPY apis/management/functions/xtenant/ /src/apis/management/functions/xtenant/
 
-WORKDIR /src/configurations/management/functions/xtenant
+WORKDIR /src/apis/management/functions/xtenant
 
 RUN --mount=type=cache,target=/go/pkg/mod go mod download
 

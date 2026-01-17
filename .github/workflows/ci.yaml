@@ -6,8 +6,8 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'configurations/management/**'
-      - 'configurations/pkg/**'
+      - 'apis/management/**'
+      - 'apis/pkg/**'
 
 env:
   REGISTRY: ghcr.io
@@ -24,27 +24,27 @@ jobs:
         with:
           go-version: '1.24'
           cache-dependency-path: |
-            configurations/management/functions/xtenant/go.sum
-            configurations/pkg/resources/go.sum
+            apis/management/functions/xtenant/go.sum
+            apis/pkg/resources/go.sum
 
       - name: Lint shared resources
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.1
-          working-directory: configurations/pkg/resources
+          working-directory: apis/pkg/resources
 
       - name: Test shared resources
-        working-directory: configurations/pkg/resources
+        working-directory: apis/pkg/resources
         run: go test -v -cover ./...
 
       - name: Lint function
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.1
-          working-directory: configurations/management/functions/xtenant
+          working-directory: apis/management/functions/xtenant
 
       - name: Test function
-        working-directory: configurations/management/functions/xtenant
+        working-directory: apis/management/functions/xtenant
         run: go test -v -cover ./...
 
   build-and-push:
@@ -70,15 +70,15 @@ jobs:
 
       - name: Build and push function
         run: |
-          docker build . -f configurations/management/functions/xtenant/Dockerfile --platform=linux/amd64 --tag runtime-amd64
-          cd configurations/management/functions/xtenant
+          docker build . -f apis/management/functions/xtenant/Dockerfile --platform=linux/amd64 --tag runtime-amd64
+          cd apis/management/functions/xtenant
           crossplane xpkg build --package-root=package --embed-runtime-image=runtime-amd64 --package-file=function.xpkg
           crossplane xpkg push --package-files=function.xpkg ${{ env.FUNCTION_IMAGE }}:${{ github.sha }}
           crossplane xpkg push --package-files=function.xpkg ${{ env.FUNCTION_IMAGE }}:v0.0.1
           crossplane xpkg push --package-files=function.xpkg ${{ env.FUNCTION_IMAGE }}:latest
 
       - name: Build and push configuration
-        working-directory: configurations/management
+        working-directory: apis/management
         run: |
           crossplane xpkg build --package-root=package --examples-root=examples --package-file=configuration.xpkg
           crossplane xpkg push --package-files=configuration.xpkg ${{ env.CONFIG_IMAGE }}:${{ github.sha }}
