@@ -33,6 +33,18 @@ spec:
                   description: Git repositories the tenant can deploy from
                   items:
                     type: string
+                features:
+                  type: object
+                  description: Optional features to enable for this tenant
+                  properties:
+                    argoWorkflows:
+                      type: object
+                      description: Argo Workflows integration
+                      properties:
+                        enabled:
+                          type: boolean
+                          description: Enable Argo Workflows RBAC for this tenant
+                          default: false
             status:
               type: object
               properties:

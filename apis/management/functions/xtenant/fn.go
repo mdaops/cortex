@@ -12,6 +12,7 @@ import (
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/resource/composed"
 	"github.com/crossplane/function-sdk-go/response"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 // Function implements the Crossplane composition function for Tenant resources.
@@ -56,6 +57,30 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		"project":   project,
 	}
 
+	if argoWorkflowsEnabled(oxr) {
+		desiredTyped["argo-workflow-sa"] = resources.NewServiceAccount(resources.ServiceAccountConfig{
+			Name:      "argo-workflow",
+			Namespace: tenantName,
+		})
+		desiredTyped["argo-workflow-role"] = resources.NewRole(resources.RoleConfig{
+			Name:      "argo-workflow",
+			Namespace: tenantName,
+			Rules: []rbacv1.PolicyRule{
+				{
+					APIGroups: []string{"argoproj.io"},
+					Resources: []string{"workflowtaskresults"},
+					Verbs:     []string{"create", "patch"},
+				},
+			},
+		})
+		desiredTyped["argo-workflow-rolebinding"] = resources.NewRoleBinding(resources.RoleBindingConfig{
+			Name:               "argo-workflow",
+			Namespace:          tenantName,
+			RoleName:           "argo-workflow",
+			ServiceAccountName: "argo-workflow",
+		})
+	}
+
 	desired, err := request.GetDesiredComposedResources(req)
 	if err != nil {
 		response.Fatal(rsp, errors.Wrap(err, "cannot get desired composed resources"))
@@ -80,4 +105,12 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	response.ConditionTrue(rsp, "FunctionSuccess", "Success").TargetCompositeAndClaim()
 
 	return rsp, nil
+}
+
+func argoWorkflowsEnabled(oxr *resource.Composite) bool {
+	enabled, err := oxr.Resource.GetBool("spec.features.argoWorkflows.enabled")
+	if err != nil {
+		return false
+	}
+	return enabled
 }
