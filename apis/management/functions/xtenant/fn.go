@@ -22,75 +22,79 @@ type Function struct {
 	log logging.Logger
 }
 
-// tenantComposer holds state for composing tenant resources.
-type tenantComposer struct {
+// composer holds state for composing resources from an XR.
+type composer struct {
 	oxr     *resource.Composite
-	name    string
 	desired map[resource.Name]any
 }
 
-func newTenantComposer(oxr *resource.Composite) (*tenantComposer, error) {
-	name, err := oxr.Resource.GetString("spec.name")
-	if err != nil {
-		return nil, errors.Wrap(err, "spec.name is required")
-	}
-	return &tenantComposer{
+func newComposer(oxr *resource.Composite) *composer {
+	return &composer{
 		oxr:     oxr,
-		name:    name,
 		desired: make(map[resource.Name]any),
-	}, nil
+	}
 }
 
-func (tc *tenantComposer) getString(path string) string {
-	val, _ := tc.oxr.Resource.GetString(path)
+func (c *composer) getString(path string) string {
+	val, _ := c.oxr.Resource.GetString(path)
 	return val
 }
 
-func (tc *tenantComposer) getStringArray(path string) []string {
-	val, _ := tc.oxr.Resource.GetStringArray(path)
+func (c *composer) getStringArray(path string) []string {
+	val, _ := c.oxr.Resource.GetStringArray(path)
 	return val
 }
 
-func (tc *tenantComposer) featureEnabled(feature string) bool {
-	enabled, err := tc.oxr.Resource.GetBool("spec.features." + feature + ".enabled")
+func (c *composer) featureEnabled(feature string) bool {
+	enabled, err := c.oxr.Resource.GetBool("spec.features." + feature + ".enabled")
 	return err == nil && enabled
 }
 
-func (tc *tenantComposer) add(name resource.Name, obj any) {
-	tc.desired[name] = obj
+func (c *composer) add(name resource.Name, obj any) {
+	c.desired[name] = obj
 }
 
-func (tc *tenantComposer) composeBase() error {
-	tc.add("namespace", resources.NewTenantNamespace(tc.name))
+func (c *composer) name() string {
+	return c.getString("spec.name")
+}
 
-	project, err := resources.NewTenantProject(tc.name, tc.getString("spec.description"), tc.getStringArray("spec.sourceRepos"))
+func (c *composer) composeBase() error {
+	name := c.name()
+	if name == "" {
+		return errors.New("spec.name is required")
+	}
+
+	c.add("namespace", resources.NewTenantNamespace(name))
+
+	project, err := resources.NewTenantProject(name, c.getString("spec.description"), c.getStringArray("spec.sourceRepos"))
 	if err != nil {
 		return errors.Wrap(err, "spec.sourceRepos is required")
 	}
-	tc.add("project", project)
+	c.add("project", project)
 	return nil
 }
 
-func (tc *tenantComposer) composeArgoWorkflows() {
-	if !tc.featureEnabled("argoWorkflows") {
+func (c *composer) composeArgoWorkflows() {
+	if !c.featureEnabled("argoWorkflows") {
 		return
 	}
-	tc.add("argo-workflow-sa", resources.NewServiceAccount(resources.ServiceAccountConfig{
+	name := c.name()
+	c.add("argo-workflow-sa", resources.NewServiceAccount(resources.ServiceAccountConfig{
 		Name:      "argo-workflow",
-		Namespace: tc.name,
+		Namespace: name,
 	}))
-	tc.add("argo-workflow-role", resources.NewRole(resources.RoleConfig{
+	c.add("argo-workflow-role", resources.NewRole(resources.RoleConfig{
 		Name:      "argo-workflow",
-		Namespace: tc.name,
+		Namespace: name,
 		Rules: []rbacv1.PolicyRule{{
 			APIGroups: []string{"argoproj.io"},
 			Resources: []string{"workflowtaskresults"},
 			Verbs:     []string{"create", "patch"},
 		}},
 	}))
-	tc.add("argo-workflow-rolebinding", resources.NewRoleBinding(resources.RoleBindingConfig{
+	c.add("argo-workflow-rolebinding", resources.NewRoleBinding(resources.RoleBindingConfig{
 		Name:               "argo-workflow",
-		Namespace:          tc.name,
+		Namespace:          name,
 		RoleName:           "argo-workflow",
 		ServiceAccountName: "argo-workflow",
 	}))
@@ -111,18 +115,14 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		"xr-kind", oxr.Resource.GetKind(),
 	)
 
-	tc, err := newTenantComposer(oxr)
-	if err != nil {
+	c := newComposer(oxr)
+
+	if err := c.composeBase(); err != nil {
 		response.Fatal(rsp, err)
 		return rsp, nil
 	}
 
-	if err := tc.composeBase(); err != nil {
-		response.Fatal(rsp, err)
-		return rsp, nil
-	}
-
-	tc.composeArgoWorkflows()
+	c.composeArgoWorkflows()
 
 	desired, err := request.GetDesiredComposedResources(req)
 	if err != nil {
@@ -130,13 +130,13 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		return rsp, nil
 	}
 
-	for name, obj := range tc.desired {
-		c := composed.New()
-		if err := resources.ConvertViaJSON(c, obj); err != nil {
+	for name, obj := range c.desired {
+		res := composed.New()
+		if err := resources.ConvertViaJSON(res, obj); err != nil {
 			response.Fatal(rsp, errors.Wrapf(err, "cannot convert %s to unstructured", name))
 			return rsp, nil
 		}
-		desired[name] = &resource.DesiredComposed{Resource: c}
+		desired[name] = &resource.DesiredComposed{Resource: res}
 	}
 
 	if err := response.SetDesiredComposedResources(rsp, desired); err != nil {
@@ -144,7 +144,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		return rsp, nil
 	}
 
-	log.Info("Composed tenant resources", "tenant", tc.name)
+	log.Info("Composed tenant resources", "tenant", c.name())
 	response.ConditionTrue(rsp, "FunctionSuccess", "Success").TargetCompositeAndClaim()
 
 	return rsp, nil
