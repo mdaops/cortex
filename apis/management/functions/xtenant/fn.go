@@ -16,6 +16,7 @@ import (
 	"github.com/crossplane/function-sdk-go/response"
 )
 
+// Function implements the Crossplane composition function for Tenant resources.
 type Function struct {
 	fnv1.UnimplementedFunctionRunnerServiceServer
 	log logging.Logger
@@ -67,6 +68,7 @@ func composeArgoWorkflows(c *composer.Composer) {
 	}))
 }
 
+// RunFunction composes namespace and ArgoCD project resources for a Tenant.
 func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) (*fnv1.RunFunctionResponse, error) {
 	rsp := response.To(req, response.DefaultTTL)
 
