@@ -7,6 +7,7 @@ FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION} AS build
 WORKDIR /src
 ENV CGO_ENABLED=0
 
+COPY apis/pkg/composer/ /src/apis/pkg/composer/
 COPY apis/pkg/resources/ /src/apis/pkg/resources/
 COPY apis/management/functions/xtenant/ /src/apis/management/functions/xtenant/
 
