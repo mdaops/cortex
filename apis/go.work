@@ -1,0 +1,7 @@
+go 1.24.11
+
+use (
+	./management/functions/xtenant
+	./pkg/composer
+	./pkg/resources
+)

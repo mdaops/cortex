@@ -141,6 +141,83 @@ func TestRunFunction(t *testing.T) {
 				},
 			},
 		},
+		"ArgoWorkflowsEnabled": {
+			reason: "The function should create RBAC resources when argoWorkflows is enabled",
+			args: args{
+				req: &fnv1.RunFunctionRequest{
+					Observed: &fnv1.State{
+						Composite: &fnv1.Resource{
+							Resource: resource.MustStructJSON(`{
+								"apiVersion": "platform.synapse.io/v1alpha1",
+								"kind": "Tenant",
+								"metadata": {"name": "ml"},
+								"spec": {
+									"name": "ml",
+									"sourceRepos": ["https://github.com/org/ml-apps.git"],
+									"features": {
+										"argoWorkflows": {
+											"enabled": true
+										}
+									}
+								}
+							}`),
+						},
+					},
+				},
+			},
+			wantResourceCnt: 5,
+			validateFn: func(t *testing.T, rsp *fnv1.RunFunctionResponse) {
+				t.Helper()
+				resources := rsp.GetDesired().GetResources()
+
+				sa := resources["argo-workflow-sa"]
+				if sa == nil {
+					t.Fatal("expected argo-workflow-sa resource")
+				}
+				saData := structToMap(t, sa.GetResource())
+				assertEqual(t, "ml-argo-workflow-sa", getNestedString(saData, "metadata", "name"))
+
+				role := resources["argo-workflow-role"]
+				if role == nil {
+					t.Fatal("expected argo-workflow-role resource")
+				}
+				roleData := structToMap(t, role.GetResource())
+				assertEqual(t, "ml-argo-workflow-role", getNestedString(roleData, "metadata", "name"))
+
+				rb := resources["argo-workflow-rolebinding"]
+				if rb == nil {
+					t.Fatal("expected argo-workflow-rolebinding resource")
+				}
+				rbData := structToMap(t, rb.GetResource())
+				assertEqual(t, "ml-argo-workflow-rolebinding", getNestedString(rbData, "metadata", "name"))
+			},
+		},
+		"ArgoWorkflowsDisabled": {
+			reason: "The function should not create RBAC resources when argoWorkflows is disabled",
+			args: args{
+				req: &fnv1.RunFunctionRequest{
+					Observed: &fnv1.State{
+						Composite: &fnv1.Resource{
+							Resource: resource.MustStructJSON(`{
+								"apiVersion": "platform.synapse.io/v1alpha1",
+								"kind": "Tenant",
+								"metadata": {"name": "ml"},
+								"spec": {
+									"name": "ml",
+									"sourceRepos": ["https://github.com/org/ml-apps.git"],
+									"features": {
+										"argoWorkflows": {
+											"enabled": false
+										}
+									}
+								}
+							}`),
+						},
+					},
+				},
+			},
+			wantResourceCnt: 2,
+		},
 	}
 
 	for name, tc := range cases {

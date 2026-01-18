@@ -4,11 +4,12 @@ ARG GO_VERSION=1
 
 FROM --platform=${BUILDPLATFORM} golang:${GO_VERSION} AS build
 
-WORKDIR /src
+WORKDIR /src/apis
 ENV CGO_ENABLED=0
 
-COPY apis/pkg/resources/ /src/apis/pkg/resources/
-COPY apis/management/functions/xtenant/ /src/apis/management/functions/xtenant/
+COPY apis/go.work ./
+COPY apis/pkg/ ./pkg/
+COPY apis/management/functions/xtenant/ ./management/functions/xtenant/
 
 WORKDIR /src/apis/management/functions/xtenant
 
