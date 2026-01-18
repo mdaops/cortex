@@ -91,7 +91,7 @@ spec:
     artifactRepository:
       s3:
         bucket: argo-artifacts
-        endpoint: seaweedfs-filer.seaweedfs-system.svc.cluster.local:8333
+        endpoint: seaweedfs-s3.seaweedfs-system.svc.cluster.local:8333
         insecure: true
         accessKeySecret:
           name: argo-artifacts-s3
