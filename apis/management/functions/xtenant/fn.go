@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 
+	"github.com/mdaops/cortex/configurations/pkg/resources"
+	rbacv1 "k8s.io/api/rbac/v1"
+
 	"github.com/crossplane/function-sdk-go/errors"
 	"github.com/crossplane/function-sdk-go/logging"
 	fnv1 "github.com/crossplane/function-sdk-go/proto/v1"
@@ -10,9 +13,6 @@ import (
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/resource/composed"
 	"github.com/crossplane/function-sdk-go/response"
-	rbacv1 "k8s.io/api/rbac/v1"
-
-	"github.com/mdaops/cortex/configurations/pkg/resources"
 )
 
 // Function implements the Crossplane composition function for Tenant resources.
